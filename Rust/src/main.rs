@@ -1,6 +1,8 @@
 use std::io::{self, Write};
 
 const N: usize = 100;
+const VOCALES: &str = "aeiouAEIOUáéíóúÁÉÍÓÚüÜ";
+const ALFABETO: &str = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZñÑáéíóúÁÉÍÓÚüÜ";
 
 struct Cadena {
     longitud: usize,
@@ -15,25 +17,25 @@ impl Cadena {
         }
     }
 
-    fn obt_longitud(&self) -> usize {
+    fn obt_longitud(&self) -> usize {  //opcion 3
         self.longitud
     }
 
-    fn add_char(&mut self, c: char) {
+    fn add_char(&mut self, c: char) {  
         if self.longitud < N {
             self.caracteres[self.longitud] = c;
             self.longitud += 1;
         }
     }
 
-    fn obt_char(&self, posicion: usize) -> char {
+    fn obt_char(&self, posicion: usize) -> char {  //opcion 4
         if posicion >= 1 && posicion <= self.longitud {
             self.caracteres[posicion - 1]
         } else {
         '\0'// caracter nulo para indicar error
         }
     }
-   fn cant_apar_char(&self, c: char) -> u32 {
+   fn cant_apar_char(&self, c: char) -> u32 {  //opcion 5
         let mut contador: u32 = 0;
         for i in 0..self.longitud {
             if self.caracteres[i] == c {
@@ -42,7 +44,7 @@ impl Cadena {
         }
         contador
     }    
-    fn car_max_repetido(&self) -> Option<char> {
+    fn car_max_repetido(&self) -> Option<char> {  //opcion 6
         let mut max_char = '\0';
         let mut max_count = 0;
         for i in 0..self.longitud {
@@ -60,29 +62,79 @@ impl Cadena {
             None
         }
     }
-    fn conv_min_may (&mut self) {
+    fn conv_min_may (&mut self) {  //opcion 7
         for i in 0..self.longitud {
             let c = self.caracteres[i];
-            if c.is_ascii_lowercase() {
-                self.caracteres[i] = c.to_ascii_uppercase();
+            if c >= 'a' && c <= 'z' {
+                self.caracteres[i] = ((c as u8) - 32) as char;
             }
         }
     }
-    fn inv_cadena(&mut self) {
+    
+    fn inv_cadena(&mut self) {  //opcion 8
         for i in 0..self.longitud / 2 {
             let temp = self.caracteres[i];
             self.caracteres[i] = self.caracteres[self.longitud - 1 - i];
             self.caracteres[self.longitud - 1 - i] = temp;
         }
     }
-    fn palindrome(&self) -> bool {
-        for i in 0..self.longitud / 2 {
-            if self.caracteres[i] != self.caracteres[self.longitud - 1 - i] {
+    fn palindromo(&self) -> bool { //opcion 9
+        let mut texto: [char; N] = ['\0'; N];
+        let mut len: usize = 0;
+        for i in 0..self.longitud {
+            let mut c = self.caracteres[i];
+            if c == ' ' {
+                continue;
+            }
+            if c >= 'A' && c <= 'Z' {
+                c = ((c as u8) + 32) as char;
+            }
+            texto[len] = c;
+            len += 1;
+        }
+        let mut i: usize = 0;
+        while i < len / 2 {
+            if texto[i] != texto[len - 1 - i] {
                 return false;
             }
+            i += 1;
         }
-         return true;
-    } 
+        true
+    }      
+    fn reemplazar_pos_car(&mut self, pos:usize, c: char) {  //opcion 10
+       let pos = pos - 1; // ajustar a índice 0
+        if pos >= 0 && pos < self.longitud {
+            self.caracteres[pos] = c;
+        }
+    }
+
+    fn reemplazar_car(&mut self, c: char, x: char)  {  //opcion 11
+        for i in 0..self.longitud {
+            if self.caracteres[i] == c {
+                self.caracteres[i] = x;
+            }
+        }
+    }
+    fn cont_voc_cons(&self) -> (u32, u32) {  //opcion 12
+        let mut vocales: u32 = 0;
+        let mut consonantes: u32 = 0;
+
+        for i in 0..self.longitud {
+            let c = self.caracteres[i];
+
+            if VOCALES.contains(c) {
+                vocales += 1;
+            } else if ALFABETO.contains(c) {
+                consonantes += 1;
+            }
+        }
+
+        println!("Vocales: {}, Consonantes: {}", vocales, consonantes);
+        (vocales, consonantes)
+    }
+    
+
+    
     // limpia la cadena para poder ingresar una nueva
     fn limpiar(&mut self) {
         self.longitud = 0;
@@ -131,6 +183,10 @@ fn mostrar_menu(c: &Cadena) {
     println!("║  6. Caracter mas repetido        ║");
     println!("║  7. Convertir a mayúsculas       ║");
     println!("║  8. Invertir cadena              ║");
+    println!("║  9. Verificar palíndromo         ║");
+    println!("║ 10. Reemplazar carácter          ║");
+    println!("║ 11. Reemplazar carácter por otro ║");
+    println!("║ 12. Contar vocales y consonantes ║");
     println!("╠══════════════════════════════════╣");
     println!("║  Q. Salir                        ║");
     println!("╚══════════════════════════════════╝");
@@ -216,11 +272,50 @@ fn main() {
                     println!(" Cadena invertida.");
                 }
                 "9" => {
-                    if c.palindrome() {
+                    if c.palindromo() {
                         println!(" La cadena es un palíndromo.");
                     } else {
                         println!(" La cadena no es un palíndromo.");
                     }
+                }
+                "10" => {
+                    println!("  Ingresa la posición a reemplazar (1 = izquierda):");
+                    match leer_numero() {
+                        Some(pos) if pos >= 1 && pos <= c.obt_longitud() => {
+                            println!("  Ingresa el nuevo carácter:");
+                            let entrada = leer_linea();
+                            match entrada.chars().next() {
+                                Some(car) => {
+                                    c.reemplazar_pos_car(pos, car);
+                                    println!("  Carácter en posición {} reemplazado por '{}'.", pos, car);
+                                }
+                                None => println!("  No ingresaste ningún carácter."),
+                            }
+                        }
+                        Some(_) => println!("  Posición fuera de rango (1 a {}).", c.obt_longitud()),
+                        None    => println!("  Posición inválida."),
+                    }
+                }
+                "11" => {
+                    println!("  Ingresa el carácter a reemplazar:");
+                    let entrada = leer_linea();
+                    match entrada.chars().next() {
+                        Some(car) => {
+                            println!("  Ingresa el nuevo carácter:");
+                            let entrada2 = leer_linea();
+                            match entrada2.chars().next() {
+                                Some(car2) => {
+                                    c.reemplazar_car(car, car2);
+                                    println!("  Carácter '{}' reemplazado por '{}'.", car, car2);
+                                }
+                                None => println!("  No ingresaste ningún carácter."),
+                            }
+                        }
+                        None => println!("  No ingresaste ningún carácter."),
+                    }
+                }
+                "12" => {
+                    c.cont_voc_cons();
                 }
             "q" | "Q" => { println!("\n  Hasta luego.\n"); break; }
             _          => println!("  Opción no válida."),
