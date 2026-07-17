@@ -1,585 +1,546 @@
-const NF: usize = 120;
-const NC: usize = 120;
+use std::io::{self, Write};
 
-struct Matriz {
-    nro_filas:    usize,
-    nro_columnas: usize,
-    elemento: [[u64; NC]; NF],
+const N: usize = 100;
+const VOCALES: &str = "aeiouAEIOUáéíóúÁÉÍÓÚüÜ";
+const ALFABETO: &str = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZñÑáéíóúÁÉÍÓÚüÜ";
+struct Cadena {
+    longitud: usize,
+    caracteres: [char; N],
 }
 
-impl Matriz {
-    fn new(nro_filas: usize, nro_columnas: usize) -> Matriz {
-        Matriz {
-            nro_filas,
-            nro_columnas,
-            elemento: [[0; NC]; NF],
+impl Cadena {
+    fn new() -> Cadena {
+        Cadena {
+            longitud: 0,
+            caracteres: ['\0'; N],
         }
     }
 
-    fn obt_nro_filas(&self) -> usize {
-        self.nro_filas
+    fn obt_longitud(&self) -> usize {  //opcion 3
+        self.longitud
     }
 
-    fn obt_nro_columnas(&self) -> usize {
-        self.nro_columnas
-    }
-
-    // leer celda
-    fn get_celda(&self, f: usize, c: usize) -> u64 {
-        self.elemento[f][c]
-    }
-
-    // escribir celda
-    fn set_celda(&mut self, f: usize, c: usize, valor: u64) {
-        self.elemento[f][c] = valor;
-    }
-    
-    fn summar_elementos(&self) -> u64 {
-        let mut suma=0;
-        for i in 0..self.obt_nro_filas() {
-            for j in 0..self.obt_nro_columnas(){
-                suma += self.elemento[i][j];
-            }
-        }
-        suma
-    }
-
-    // ── Mostrar ───────────────────────────────────────────────────
-
-    fn mostrar(&self) {
-        println!();
-        for f in 0..self.nro_filas {
-            print!("  ");
-            for _ in 0..self.nro_columnas {
-                print!("┌─────────┐");
-            }
-            println!();
-            print!("  ");
-            for c in 0..self.nro_columnas {
-                print!("│{:^9}│", self.elemento[f][c]);
-            }
-            println!();
-            print!("  ");
-            for _ in 0..self.nro_columnas {
-                print!("└─────────┘");
-            }
-            println!();
-        }
-        print!("  ");
-        for c in 0..self.nro_columnas {
-            print!("{:^11}", format!("c{}", c));
-        }
-        println!("\n");
-    }
-
-    fn sumar_pares(&self) -> u64 {
-        let mut suma = 0;
-        for i in 0..self.obt_nro_filas() {
-            for j in 0..self.obt_nro_columnas() {
-                if self.elemento[i][j] % 2 == 0 {
-                    suma += self.elemento[i][j];
-                }
-            }
-        }
-        suma
-    }
-
-    fn sumar_impares(&self) -> u64 {
-        let mut suma = 0;
-        for i in 0..self.obt_nro_filas() {
-            for j in 0..self.obt_nro_columnas() {
-                if self.elemento[i][j] % 2 != 0 {
-                    suma += self.elemento[i][j];
-                }
-            }
-        }
-        suma
-    }
-
-    fn elemento_mayor(&self) -> u64 {
-        let mut mayor = self.elemento[0][0];
-        for i in 0..self.obt_nro_filas() {
-            for j in 0..self.obt_nro_columnas() {
-                if self.elemento[i][j] > mayor {
-                    mayor = self.elemento[i][j];
-                }
-            }
-        }
-        mayor
-    }
-
-    fn sumar_columna(&self, columna : usize) -> u64 {
-        let mut suma = 0;
-        for fila in 0..self.obt_nro_filas() {
-            suma += self.elemento[fila][columna];
-        }
-        suma
-    }
-
-    fn sumar_fila(&self, fila:usize ) -> u64 {
-        let mut suma = 0;
-        for columna in 0..self.obt_nro_columnas() {
-            suma += self.elemento[fila][columna];    
-        }
-        suma
-    }
-
-    
-
-    fn esta_ordenada(&self) -> bool {
-        let filas = self.nro_filas;
-        let columnas = self.nro_columnas;
-        
-        // Recorrer toda la matriz
-        for i in 0..filas {
-            for j in 0..columnas {
-                let actual = self.elemento[i][j];
-                
-                // Verificar siguiente elemento (si existe)
-                if j + 1 < columnas {
-                    // Misma fila, siguiente columna
-                    if actual > self.elemento[i][j + 1] {
-                        return false;
-                    }
-                } else if i + 1 < filas {
-                    // Última columna, pasar a siguiente fila
-                    if actual > self.elemento[i + 1][0] {
-                        return false;
-                    }
-                }
-            }
-        }
-        true
-    }
-
-    fn sumar_borde(&self) -> u64 {
-    let mut suma = 0;
-    let filas = self.nro_filas;
-    let columnas = self.nro_columnas;
-    for i in 0..filas {
-        for j in 0..columnas {
-            if i == 0 || i == filas - 1 || j == 0 || j == columnas - 1 {
-                suma += self.elemento[i][j];
-            }
-        }
-    }
-    suma
-}
-
-    pub fn busqueda_binaria(&self, ele:u64)->Option<(usize,usize)>{
-        println!("Buscando {} en la matriz...", ele);
-        if !self.esta_ordenada() {
-        println!("La matriz no está ordenada, El resultado podría ser incorrecto");
-        }
-        let mut ini:usize = 0;
-        let mut fin:usize = self.nro_columnas * self.nro_filas -1;
-        while ini <= fin {
-            let medio = (ini + fin) / 2;
-            let fila = medio / self.nro_columnas;
-            let col = medio % self.nro_columnas;
-            let valor = self.elemento[fila][col];
-            if valor == ele{
-                return Some((fila, col));
-            }
-            if ele < valor {
-                if medio == 0{
-                    break;
-                }
-                fin  = medio-1;
-            }else{
-                ini = medio +1;
-            }
-
-        }
-        None
-    }
-
-        fn ordenar_espiral(&mut self) {
-        let filas = self.nro_filas;
-        let columnas = self.nro_columnas;
-        let total_elementos = filas * columnas;
-        let mut elementos: Vec<u64> = Vec::with_capacity(total_elementos);
-        for i in 0..filas {
-            for j in 0..columnas {
-                elementos.push(self.elemento[i][j]);
-            }
-        }
-        
-        elementos.sort();
-        
-        let posiciones = self.generar_posiciones_espiral();
-        
-        for (idx, (fila, col)) in posiciones.iter().enumerate() {
-            self.elemento[*fila][*col] = elementos[idx];
+    fn add_char(&mut self, c: char) {  
+        if self.longitud < N {
+            self.caracteres[self.longitud] = c;
+            self.longitud += 1;
         }
     }
 
-    fn generar_posiciones_espiral(&self) -> Vec<(usize, usize)> {
-        let filas = self.nro_filas;
-        let columnas = self.nro_columnas;
-        let mut posiciones: Vec<(usize, usize)> = Vec::new();
-        
-        let centro_fila = filas / 2;
-        let centro_col = columnas / 2;
-        
-        let mut visitado = vec![vec![false; columnas]; filas];
-        
-        let direcciones = [(0, 1), (1, 0), (0, -1), (-1, 0)];
-        let mut dir_idx = 0;
-        
-        let mut fila = centro_fila;
-        let mut col = centro_col;
-        let mut paso = 1;
-        
-        visitado[fila][col] = true;
-        posiciones.push((fila, col));
-        
-        while posiciones.len() < filas * columnas {
-            for _ in 0..paso {
-                let nueva_fila = fila as isize + direcciones[dir_idx].0;
-                let nueva_col = col as isize + direcciones[dir_idx].1;
-                
-                if nueva_fila >= 0 && nueva_fila < filas as isize && 
-                   nueva_col >= 0 && nueva_col < columnas as isize {
-                    
-                    let f = nueva_fila as usize;
-                    let c = nueva_col as usize;
-                    
-                    if !visitado[f][c] {
-                        visitado[f][c] = true;
-                        posiciones.push((f, c));
-                        fila = f;
-                        col = c;
-                    } else {
-                        break;
-                    }
-                } else {
-                    break;
-                }
-            }
-
-            dir_idx = (dir_idx + 1) % 4;
-            
-            if dir_idx % 2 == 0 {
-                paso += 1;
-            }
-        }
-        
-        posiciones
-    }
-
-    fn suma_diagonal_mayor(&self)->u64{
-    let mut mayor = 0;
-    
-    for n in 0..(self.nro_filas + self.nro_columnas - 1){
-        let mut suma = 0;
-        let mut i;
-        let mut j;
-        if n < self.nro_filas {
-            i = n;
-            j = 0;
-        }
-        else {
-            i = self.nro_filas-1;
-            j = n - self.nro_filas + 1;
-        }
-        while i < self.nro_filas && j < self.nro_columnas {
-            suma += self.elemento[i][j];
-            if i == 0 {
-                break;
-            }
-            i -= 1;
-            j += 1;
-        }
-        if suma > mayor{
-            mayor = suma;
+    fn obt_char(&self, posicion: usize) -> char {  //opcion 4
+        if posicion >= 1 && posicion <= self.longitud {
+            self.caracteres[posicion - 1]
+        } else {
+        '\0'// caracter nulo para indicar error
         }
     }
-    return mayor;
-}
-
-    fn prom_diagonal_mayor_der(&self) -> f64 {
-    let mut mayor = 0;
-    let mut cantidad_mayor = 0;
-
-    for n in 0..(self.nro_filas + self.nro_columnas - 1) {
-        let mut suma = 0;
-        let mut cantidad = 0;
-        let mut i;
-        let mut j;
-        if n < self.nro_filas {
-            i = n;
-            j = 0;
-        }
-        else {
-            i = self.nro_filas - 1;
-            j = n - self.nro_filas + 1;
-        }
-        while i < self.nro_filas && j < self.nro_columnas {
-            suma += self.elemento[i][j];
-            cantidad += 1;
-            if i == 0 {
-                break;
-            }
-            i -= 1;
-            j += 1;
-        }
-        if suma > mayor {
-            mayor = suma;
-            cantidad_mayor = cantidad;
-        }
-    }
-
-    return mayor as f64 / cantidad_mayor as f64;
-}
-
-    fn prom_diagonal_mayor_izq(&self) -> f64 {
-    let mut mayor = 0;
-    let mut cantidad_mayor = 0;
-
-    for n in 0..(self.nro_filas + self.nro_columnas - 1) {
-        let mut suma = 0;
-        let mut cantidad = 0;
-        let mut i;
-        let mut j;
-        if n < self.nro_filas {
-            i = n;
-            j = self.nro_columnas - 1;
-        }
-        else {
-            i = self.nro_filas - 1;
-            j = self.nro_columnas - 1 - (n - self.nro_filas + 1);
-        }
-        while i < self.nro_filas && j < self.nro_columnas {
-            suma += self.elemento[i][j];
-            cantidad += 1;
-            if i == 0 || j == 0 {
-                break;
-            }
-            i -= 1;
-            j -= 1;
-        }
-        if suma > mayor {
-            mayor = suma;
-            cantidad_mayor = cantidad;
-        }
-    }
-
-    return mayor as f64 / cantidad_mayor as f64;
-}
-
-fn rotar_borde(&mut self) {
-    let rows = self.nro_filas;
-    let cols = self.nro_columnas;
-    let mut coordenadas = Vec::new();
-
-    for c in 0..cols {
-        coordenadas.push((0, c));
-    }
-    for f in 1..rows {
-        coordenadas.push((f, cols - 1));
-    }
-    for c in (0..cols - 1).rev() {
-        coordenadas.push((rows - 1, c));
-    }
-    for f in (1..rows - 1).rev() {
-        coordenadas.push((f, 0));
-    }
-    let mut valores: Vec<u64> = coordenadas
-        .iter()
-        .map(|&(f, c)| self.elemento[f][c])
-        .collect();
-    valores.rotate_right(8);
-    for (i, &(f, c)) in coordenadas.iter().enumerate() {
-        self.elemento[f][c] = valores[i];
-    }
-}
-
-    fn rotar_anillo_interno(&mut self) {
-        let fil = self.nro_filas;
-        let cols = self.nro_columnas;
-        let mut coordenadas = Vec::new();
-
-        for c in 1..cols - 1 {
-        coordenadas.push((1, c));
-        }
-        for f in 2..fil - 1 {
-        coordenadas.push((f, cols - 2));
-        }
-        for c in (1..cols-2).rev() {
-        coordenadas.push((fil-2,c))    
-        }
-        for f in (2..fil - 2).rev() {
-        coordenadas.push((f, 1));
-        }
-        let mut valores: Vec<u64> = coordenadas
-          .iter()
-          .map(|&(f, c)| self.elemento[f][c])
-          .collect();
-        valores.rotate_right(3);
-        for (i , &(f,c)) in coordenadas.iter().enumerate() {
-        self.elemento[f][c] = valores[i];
-    }
-}
-
-    fn transponer(&self) -> Matriz {
-        let mut nueva = Matriz::new(self.nro_columnas, self.nro_filas);
-        for i in 0..self.nro_filas {
-            for j in 0..self.nro_columnas {
-                nueva.set_celda(j, i, self.elemento[i][j]);
-            }
-        }
-        nueva
-    }
-
-    // Función auxiliar para verificar si un número es primo
-fn es_primo(num: u64) -> bool {
-    if num < 2 {
-        return false;
-    }
-    for i in 2..=((num as f64).sqrt() as u64) {
-        if num % i == 0 {
-            return false;
-        }
-    }
-    true
-}
-
-    // Cuenta cuántos números primos hay en la matriz
-fn contar_primos(&self) -> usize {
-    let mut contador = 0;
-    for i in 0..self.nro_filas {
-        for j in 0..self.nro_columnas {
-            if Self::es_primo(self.elemento[i][j]) {
+   fn cant_apar_char(&self, c: char) -> u32 {  //opcion 5
+        let mut contador: u32 = 0;
+        for i in 0..self.longitud {
+            if self.caracteres[i] == c {
                 contador += 1;
             }
         }
-    }
-    contador
-}
-
-    // Gira la matriz 90 grados a la derecha
-    fn girar_90_grados(&mut self) {
-        let n = self.nro_filas;
-        let mut nueva = Matriz::new(n, n);
-    
-        for i in 0..n {
-            for j in 0..n {
-                nueva.set_celda(j, n - 1 - i, self.elemento[i][j]);
+        contador
+    }    
+    fn car_max_repetido(&self) -> Option<char> {  //opcion 6
+        let mut max_char = '\0';
+        let mut max_count = 0;
+        for i in 0..self.longitud {
+            let c = self.caracteres[i];
+            let count = self.cant_apar_char(c);
+            if count > max_count {
+                max_char = c;
+                max_count = count;
             }
         }
-        *self = nueva;
+        if max_count > 0 {
+            Some (max_char)
+    
+        } else {
+            None
+        }
     }
-
-    // Cuenta cuántas veces aparece cada número
-    fn frecuencias(&self) -> std::collections::HashMap<u64, usize> {
-        let mut frecuencias = std::collections::HashMap::new();
-        for i in 0..self.nro_filas {
-            for j in 0..self.nro_columnas {
-                *frecuencias.entry(self.elemento[i][j]).or_insert(0) += 1;
+    fn conv_min_may (&mut self) {  //opcion 7
+        for i in 0..self.longitud {
+            let c = self.caracteres[i];
+            if c >= 'a' && c <= 'z' {
+                self.caracteres[i] = ((c as u8) - 32) as char;
             }
         }
-        frecuencias
+    }
+    
+    fn inv_cadena(&mut self) {  //opcion 8
+        for i in 0..self.longitud / 2 {
+            let temp = self.caracteres[i];
+            self.caracteres[i] = self.caracteres[self.longitud - 1 - i];
+            self.caracteres[self.longitud - 1 - i] = temp;
+        }
+    }
+    fn palindromo(&self) -> bool { //opcion 9
+        let mut texto: [char; N] = ['\0'; N];
+        let mut len: usize = 0;
+        for i in 0..self.longitud {
+            let mut c = self.caracteres[i];
+            if c == ' ' {
+                continue;
+            }
+            if c >= 'A' && c <= 'Z' {
+                c = ((c as u8) + 32) as char;
+            }
+            texto[len] = c;
+            len += 1;
+        }
+        let mut i: usize = 0;
+        while i < len / 2 {
+            if texto[i] != texto[len - 1 - i] {
+                return false;
+            }
+            i += 1;
+        }
+        true
+    }      
+    fn reemplazar_pos_car(&mut self, pos:usize, c: char) {  //opcion 10
+        if pos >= 1 && pos <= self.longitud {
+            self.caracteres[pos - 1] = c;
+        }
     }
 
-    // Verifica si la matriz es mágica (todas las filas, columnas y diagonales suman lo mismo)
-fn es_magica(&self) -> bool {
-    if self.nro_filas != self.nro_columnas {
-        return false;
+    fn reemplazar_car(&mut self, c: char, x: char)  {  //opcion 11
+        for i in 0..self.longitud {
+            if self.caracteres[i] == c {
+                self.caracteres[i] = x;
+            }
+        }
     }
-    
-    let n = self.nro_filas;
-    let suma_esperada: u64 = (0..n).map(|i| self.elemento[i][i]).sum();
-    
-    // Verificar filas
-    for i in 0..n {
-        let suma_fila: u64 = (0..n).map(|j| self.elemento[i][j]).sum();
-        if suma_fila != suma_esperada {
-            return false;
+    fn cont_voc_cons(&self) -> (u32, u32) {  //opcion 12
+        let mut vocales: u32 = 0;
+        let mut consonantes: u32 = 0;
+
+        for i in 0..self.longitud {
+            let c = self.caracteres[i];
+
+            if VOCALES.contains(c) {
+                vocales += 1;
+            } else if ALFABETO.contains(c) {
+                consonantes += 1;
+            }
+        }
+        (vocales, consonantes)
+    }
+       fn eliminar_pos(& mut self, pos:usize) { //opción 13
+            if pos >= 1 && pos <= self.longitud {
+                let index = pos - 1; // ajustar a índice 0
+                for i in index..self.longitud - 1 {
+                    self.caracteres[i] = self.caracteres[i + 1];
+                }
+                self.caracteres[self.longitud - 1] = '\0'; // limpiar el último carácter
+                self.longitud -= 1; // reducir la longitud
+            }
+    }
+
+    fn obtener_subcadena(&self, inicio: usize, fin: usize) -> Cadena { //opción 14
+            let mut subcadena = Cadena::new();
+            if inicio >= 1 && fin <= self.longitud && inicio <= fin {
+                for i in (inicio - 1)..fin {
+                    subcadena.add_char(self.caracteres[i]);
+                }
+            }
+            subcadena
+    }
+        
+    fn inv_cadena_mas_la_primer_letra(&mut self) { //opción 15 
+       if self.longitud == 0 {return;}
+       let ult_char: char = self.caracteres[self.longitud - 1];
+       self.inv_cadena();
+       self.longitud +=1;
+       self.caracteres[self.longitud - 1] = ult_char;        
+    }
+    fn verMAY(&self, c: char)->bool{
+        if c>='A' && c<='Z' || c=='Ñ'{
+         true
+        }
+        else{
+            false
+        }
+    }
+
+    fn verminu(&self, c: char)->bool{
+        if c>='a' && c<='z' || c== 'ñ'{
+         true
+        }
+        else{
+            false
         }
     }
     
-    // Verificar columnas
-    for j in 0..n {
-        let suma_col: u64 = (0..n).map(|i| self.elemento[i][j]).sum();
-        if suma_col != suma_esperada {
-            return false;
+    fn encriptador_cesar(&mut self, c : usize) { //opción 16
+    let minus = ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','ñ','o','p','q','r','s','t','u','v','w','x','y','z'];
+    let mayus = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','Ñ','O','P','Q','R','S','T','U','V','W','X','Y','Z'];
+    
+    for i in 0..self.longitud {
+    //mayuscula
+        if self.verMAY(self.caracteres[i]) {
+            for j in 0..27 {
+                if self.caracteres[i] == mayus[j] {
+                    if j > 23 { 
+                        self.caracteres[i] = mayus[j + c - 24];
+                    } else {
+                        self.caracteres[i] = mayus[j + c];
+                    }
+                    break;
+                }
+            }
+
+    //minuscula
+        } else if self.verminu(self.caracteres[i]) {
+
+            for j in 0..27 {
+                if self.caracteres[i] == minus[j] {
+                    if j > 23 { 
+                        self.caracteres[i] = minus[j + c - 24];
+                    } else {
+                        self.caracteres[i] = minus[j + c];
+                    }
+                    break;
+                }
+            }
+
         }
     }
-    
-    // Verificar diagonal secundaria
-    let suma_secundaria: u64 = (0..n).map(|i| self.elemento[i][n - 1 - i]).sum();
-    if suma_secundaria != suma_esperada {
-        return false;
+}
+
+
+    //    fn insertar_subcadena(&mut self, sub: &Cadena, p: usize) {
+    //        if p >0 && p <= self.longitud + 1 && self.longitud + sub.longitud <= N{
+    //            for i in (p - 1..self.longitud).rev() {
+    //                self.caracteres[i + sub.longitud] = self.caracteres[i];
+    //            }
+    //            for i in 0..self.longitud {
+    //                self.caracteres[p - 1 + i] = sub.caracteres[i];
+    //            }
+    //            self.longitud += t;
+    //        }
+    //    }
+
+       //            for i in (p..self.longitud).rev() { self.caracteres[i + t] = self.caracteres[i]; }
+    //            for i in 0..sub.longitud { self.caracteres[p + i] = sub.caracteres[i]; }
+    //            if e { self.caracteres[p + sub.longitud] = ' '; }
+    //            self.longitud += t;
+    //        }
+    //    }
+    //}
+
+    //    fn insertar_subcadena(&mut self, sub: &Cadena, pos: usize) {
+    //    if pos > 0 && pos <= self.longitud + 1 {
+    //        let e = pos <= self.longitud && self.caracteres[pos - 1] == ' ';
+     //       let p = pos - 1 + e as usize;
+     //       let t = sub.longitud + e as usize;
+      //      if self.longitud + t <= N {
+    //            for i in (p..self.longitud).rev() { self.caracteres[i + t] = self.caracteres[i]; }
+    //            for i in 0..sub.longitud { self.caracteres[p + i] = sub.caracteres[i]; }
+    //            if e { self.caracteres[p + sub.longitud] = ' '; }
+    //            self.longitud += t;
+    //        }
+    //    }
+    //}
+
+
+
+
+
+        fn insertar_subcadena(&mut self, sub:&Cadena, p: usize){
+           if p > 0 && p <= self.longitud + 1 {
+            let e = p <= self.longitud && self.caracteres[p - 1] ==' ';
+            let k = p - 1 + e as usize;
+            let t = sub.longitud + e as usize;
+            if self.longitud + t <=N {
+                for i in (k..self.longitud).rev() {
+                    self.caracteres[i + t] = self.caracteres[i];
+                }
+                for i in 0..sub.longitud {
+                    self.caracteres[k + i] = sub.caracteres[i];
+                }
+                if e {
+                    self.caracteres[k + sub.longitud] = ' ';
+                }
+                self.longitud += t;
+            }
+           } 
+    } 
+
+    // limpia la cadena para poder ingresar una nueva
+    fn limpiar(&mut self) {
+        self.longitud = 0;
+        self.caracteres = ['\0'; N];
     }
-    
-    true
+
+
+    //p <= self.longitud && self.longitud[p - 1] = ' ';
+
+    // muestra la cadena completa carácter por carácter
+    fn mostrar(&self) {
+        for i in 0..self.longitud {
+            print!("{}", self.caracteres[i]);
+        }
+        println!();
+    }
 }
 
+// ── helpers de entrada ──────────────────────────────────────────────
+fn leer_linea() -> String {
+    let mut entrada = String::new();
+    io::stdin().read_line(&mut entrada).expect("Error al leer");
+    entrada.trim().to_string()
 }
 
-// ═══════════════════════════════════════════════════════════════════
-//  MAIN
-// ═══════════════════════════════════════════════════════════════════
+fn leer_numero() -> Option<usize> {
+    leer_linea().parse::<usize>().ok()
+}
+
+// ── menú ────────────────────────────────────────────────────────────
+fn mostrar_menu(c: &Cadena) {
+    // construimos la cadena actual para mostrarla en el encabezado
+    let mut preview = String::new();
+    for i in 0..c.longitud {
+        preview.push(c.caracteres[i]);
+    }
+    if preview.is_empty() {
+        preview = String::from("(vacía)");
+    }
+
+    println!("\n╔══════════════════════════════════╗");
+    println!("║   CADENA: {:>22}  ║", preview);
+    println!("╠══════════════════════════════════╣");
+    println!("║  1. Ingresar nueva cadena        ║");
+    println!("║  2. Mostrar cadena               ║");
+    println!("║  3. Longitud                     ║");
+    println!("║  4. Obtener carácter (posición)  ║");
+    println!("║  5. Contar apariciones           ║");
+    println!("║  6. Caracter mas repetido        ║");
+    println!("║  7. Convertir a mayúsculas       ║");
+    println!("║  8. Invertir cadena              ║");
+    println!("║  9. Verificar palíndromo         ║");
+    println!("║ 10. Reemplazar carácter          ║");
+    println!("║ 11. Reemplazar carácter por otro ║");
+    println!("║ 12. Contar vocales y consonantes ║");
+    println!("║ 13. Extraer subcadena            ║");
+    println!("║ 14. Eliminar carácter en posición║");
+    println!("║ 15. Invertir cadena + n posicion ║");
+    println!("║ 16. Encriptar con César          ║");
+    println!("║ 17. Insertar una subcadena       ║");
+    println!("╠══════════════════════════════════╣");
+    println!("║  Q. Salir                        ║");
+    println!("╚══════════════════════════════════╝");
+    print!("   Opción: ");
+    io::stdout().flush().expect("Error al mostrar menú");
+}
 
 fn main() {
-    println!("════════════════════════════════════════");
-    println!("  Matrices - POO — Programación I      ");
-    println!("════════════════════════════════════════");
+    println!("════════════════════════════════════");
+    println!("  Cadenas - POO — Programación I   ");
+    println!("════════════════════════════════════");
 
-    // ── crear la matriz 3x3 ──────────────────────────────────────
-    let mut m = Matriz::new(5, 5);
+    let mut c = Cadena::new(); //definiendo la instancia de tipo Cadena
 
-    // ── cargar datos directamente ────────────────────────────────
-    //        fila  col  valor
-    m.set_celda(0, 0, 1);   m.set_celda(0, 1, 1);   m.set_celda(0, 2, 2);    m.set_celda(0, 3, 4);    m.set_celda(0, 4, 6);
-    m.set_celda(1, 0, 4);   m.set_celda(1, 1, 1);   m.set_celda(1, 2, 2);    m.set_celda(1, 3, 2);    m.set_celda(1, 4, 2);
-    m.set_celda(2, 0, 7);   m.set_celda(2, 1, 8);   m.set_celda(2, 2, 10);   m.set_celda(2, 3, 4);    m.set_celda(2, 4, 1);
-    m.set_celda(3, 0, 3);   m.set_celda(3, 1, 7);   m.set_celda(3, 2, 6);    m.set_celda(3, 3, 5);    m.set_celda(3, 4, 10);
-    m.set_celda(4, 0, 6);   m.set_celda(4, 1, 1);   m.set_celda(4, 2, 8);    m.set_celda(4, 3, 9);    m.set_celda(4, 4, 0);
+    loop {
+        mostrar_menu(&c);
+        let opcion = leer_linea();
 
-    // ── mostrar ──────────────────────────────────────────────────
-    println!("Matriz original:");
-    m.mostrar();
+        match opcion.as_str() {
+            "1" => {
+                println!("  Ingresa la cadena:");
+                let entrada = leer_linea();
 
-    // ── sumar elementos ──────────────────────────────────────────
-    println!("Suma de los elementos de cada posicion del vector es : {}", m.summar_elementos());    
-    println!("Suma de los elementos pares de cada posicion del vector es : {}", m.sumar_pares());
-    println!("Suma de los elementos impares de cada posicion del vector es : {}", m.sumar_impares());
-    println!("Elemento mayor de la matriz es : {}", m.elemento_mayor());
-    println!("Suma de los elementos de la columna 0 es : {}", m.sumar_columna(0));    
-    println!("Suma de los elementos de la fila 0 es : {}", m.sumar_fila(0));
-    println!("Celda [0][0] usando get_celda: {}", m.get_celda(0, 0));
-    println!("Busqueda binaria del elemento 8: {:?}", m.busqueda_binaria(8));
-    println!("La suma de los elementos que están en los bordes de esta matriz es de {}", m.sumar_borde());
-    println!("La matriz está ordenada: {}", m.esta_ordenada());
-    //println!("La matriz ordenada en espiral es:");
-    //m.ordenar_espiral();
-    //m.mostrar();
-    println!("La suma de la diagonal mayor es: {}", m.suma_diagonal_mayor());
+                c.limpiar(); // reiniciamos antes de cargar la nueva
 
+                // ── proceso artesanal: carácter por carácter ──
+                for ch in entrada.chars() {
+                    c.add_char(ch);
+                }
 
-    //println!("Rotando el borde de la matriz...");
-    //m.rotar_borde();
-    //m.mostrar();
+                println!("  ✓ Cadena cargada ");
+            }
 
-    println!("Rotando el anillo interno de la matriz...");
-    m.rotar_anillo_interno();
-    m.mostrar();
-    //println!("El promedio de la diagonal mayor derecha es: {}", m.prom_diagonal_mayor_der());
-    //println!("El promedio de la diagonal menor izquierda es: {}", m.prom_diagonal_mayor_izq());
-    //println!("La matriz transpuesta es:");
-    //let transpuesta = m.transponer();
-    //transpuesta.mostrar();
-    //println!("La cantidad de números primos en la matriz es: {}", m.contar_primos());
-    //println!("Girando la matriz 90 grados a la derecha...");
-    //m.girar_90_grados();
-    //m.mostrar();
-    //println!("Frecuencia de cada número en la matriz:");
-    //let frecuencias = m.frecuencias();
-    //for (numero, frecuencia) in frecuencias {
-    //    println!("Número: {}, Frecuencia: {}", numero, frecuencia); 
-    //}
-    //println!("La matriz es mágica: {}", m.es_magica()); 
-    
+            "2" => {
+                print!("  Cadena: ");
+                c.mostrar();
+            }
+
+            "3" => println!("  Longitud: → {}", c.obt_longitud()),
+
+            "4" => {
+                println!("  Ingresa la posición (1 = izquierda):");
+                match leer_numero() {
+                    Some(pos) if pos >= 1 && pos <= c.obt_longitud() => {
+                        println!("  Carácter en posición {}: → '{}'", pos, c.obt_char(pos));
+                    }
+                    Some(_) => println!("  Posición fuera de rango (1 a {}).", c.obt_longitud()),
+                    None    => println!("  Posición inválida."),
+                }
+            } 
+            
+             "5" => {
+                println!("  Ingresa el carácter a buscar:");
+                let entrada = leer_linea();
+                match entrada.chars().next() {
+                   Some(car) => {
+                      let resultado:u32 = c.cant_apar_char(car);
+                      if resultado > 1 {
+                           println !(" '{}' aparece {} veces", car, resultado);
+                           }else if resultado == 1 {
+                              println!(" aparece 1 vez");
+                               } else {
+                                  println!(" '{}' no aparece en la cadena", car);
+                               }
+                    }
+                       None => {
+                          println!("  No ingresaste ningún carácter.")
+                        }
+                }
+             } 
+                "6" => {
+                    match c.car_max_repetido() {
+                        Some(car) => println!(" El caracter mas repetido es '{}' ", car),
+                        None => println! (" No hay caracteres en la cadena.")
+                    }
+                }
+                "7" => {
+                    c.conv_min_may();
+                    println!(" Cadena convertida a mayusculas.");
+                }
+                "8" => {
+                    c.inv_cadena();
+                    println!(" Cadena invertida.");
+                }
+                "9" => {
+                    if c.palindromo() {
+                        println!(" La cadena es un palíndromo.");
+                    } else {
+                        println!(" La cadena no es un palíndromo.");
+                    }
+                }
+                "10" => {
+                    println!("  Ingresa la posición a reemplazar (1 = izquierda):");
+                    match leer_numero() {
+                        Some(pos) if pos >= 1 && pos <= c.obt_longitud() => {
+                            println!("  Ingresa el nuevo carácter:");
+                            let entrada = leer_linea();
+                            match entrada.chars().next() {
+                                Some(car) => {
+                                    c.reemplazar_pos_car(pos, car);
+                                    println!("  Carácter en posición {} reemplazado por '{}'.", pos, car);
+                                }
+                                None => println!("  No ingresaste ningún carácter."),
+                            }
+                        }
+                        Some(_) => println!("  Posición fuera de rango (1 a {}).", c.obt_longitud()),
+                        None    => println!("  Posición inválida."),
+                    }
+                }
+                "11" => {
+                    println!("  Ingresa el carácter a reemplazar:");
+                    let entrada = leer_linea();
+                    match entrada.chars().next() {
+                        Some(car) => {
+                            println!("  Ingresa el nuevo carácter:");
+                            let entrada2 = leer_linea();
+                            match entrada2.chars().next() {
+                                Some(car2) => {
+                                    c.reemplazar_car(car, car2);
+                                    println!("  Carácter '{}' reemplazado por '{}'.", car, car2);
+                                }
+                                None => println!("  No ingresaste ningún carácter."),
+                            }
+                        }
+                        None => println!("  No ingresaste ningún carácter."),
+                    }
+                }
+                "12" => {
+                    let (vocales, consonantes) = c.cont_voc_cons();
+                    if vocales == 0 && consonantes == 0 {
+                        println!(" La cadena no contiene ningún carácter.");
+                    } else {
+                        println!(" {} Vocales y {} Consonantes", vocales, consonantes);
+                    }
+                }
+                
+                "13" => {
+                    if c.obt_longitud() == 0 {
+                        println!(" La cadena está vacía.");
+                    } else {
+                        println!(" Ingresa la posición de inicio (1-based):");
+                        if let Some(inicio) = leer_numero() {
+                            println!(" Ingresa la posición final:");
+                            if let Some(fin) = leer_numero() {
+                                let sub = c.obtener_subcadena(inicio, fin);
+                                print!(" Subcadena extraída: ");
+                                sub.mostrar();
+                            } else {
+                                println!(" Posición inválida.");
+                            }
+                        } else {
+                            println!(" Posición inválida.");
+                        }
+                    }
+                }
+
+                "14" => {
+                    if c.obt_longitud() == 0 {
+                        println!(" La cadena está vacía.");
+                    } else {
+                        println!(" Ingresa la posición a eliminar (1-based):");
+                        match leer_numero() {
+                            Some(pos) if pos >= 1 && pos <= c.obt_longitud() => {
+                                c.eliminar_pos(pos);
+                                print!(" Cadena resultante: ");
+                                c.mostrar();
+                            }
+                            Some(_) => println!(" Posición fuera de rango (1 a {}).", c.obt_longitud()),
+                            None => println!(" Posición inválida."),
+                        }
+                    }
+                } 
+                "15" => {
+                    c.inv_cadena_mas_la_primer_letra();
+                    println!(" Cadena invertida mas la primer letra");
+                } 
+                "16" => {
+                    println!(" Ingresa el número de posiciones para encriptar (1-26):");
+                    match leer_numero() {
+                        Some(cifrado) if cifrado >= 1 && cifrado <= 26 => {
+                            c.encriptador_cesar(cifrado);
+                            println!(" Cadena encriptada con César.");
+                        }
+                        Some(_) => println!(" Número fuera de rango (1-26)."),
+                        None => println!(" Número inválido."),
+                    }
+                }
+                "17" => {
+                    if c.obt_longitud() == 0 {
+                        println!(" La cadena está vacía.");
+                    } else {
+                        println!(" Ingresa la subcadena a insertar:");
+                        let mut subcadena = Cadena::new();
+                        let entrada = leer_linea();
+                        for ch in entrada.chars() {
+                            subcadena.add_char(ch);
+                        }
+                        println!(" Ingresa la posición para insertar la subcadena (1 = izquierda):");
+                        match leer_numero() {
+                            Some(pos) if pos >= 1 && pos <= c.obt_longitud() + 1 => {
+                                c.insertar_subcadena(&subcadena, pos);
+                                print!(" Cadena resultante: ");
+                                c.mostrar();
+                            }
+                            Some(_) => println!(" Posición fuera de rango (1 a {}).", c.obt_longitud() + 1),
+                            None => println!(" Posición inválida."),
+                        }
+                    }
+                }
+
+            "q" | "Q" => { println!("\n  Hasta luego.\n"); break; }
+            _          => println!("  Opción no válida."),
+        }
+    }
 }
