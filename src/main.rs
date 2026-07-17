@@ -1,237 +1,335 @@
-    use std::io::{self, Write};  // Para leer entrada y mostrar el menú sin salto de línea
-struct Numero {
-    valor: u64
+use std::io::{self, Write};
+
+const N: usize = 100;
+const VOCALES: &str = "aeiouAEIOUáéíóúÁÉÍÓÚüÜ";
+const ALFABETO: &str = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZñÑáéíóúÁÉÍÓÚüÜ";
+struct Cadena {
+    longitud: usize,
+    caracteres: [char; N],
 }
 
-impl Numero {
-    fn new(valor: u64) -> Self {
-        Numero { valor }
+impl Cadena {
+    fn new() -> Cadena {
+        Cadena {
+            longitud: 0,
+            caracteres: ['\0'; N],
+        }
     }
 
-    fn es_par(&self) -> bool { //opción 1, devuelve true si el número es par, false en caso contrario
-        self.valor % 2 == 0
+    fn obt_longitud(&self) -> usize {  //opcion 3
+        self.longitud
     }
 
-    fn es_primo(&self) -> bool { //opción 2, devuelve true si el número es primo, false en caso contrario
-        let num: u64 = self.valor;
-
-        if num < 2 {
-            return false;
+    fn add_char(&mut self, c: char) {  
+        if self.longitud < N {
+            self.caracteres[self.longitud] = c;
+            self.longitud += 1;
         }
-        if num == 2 {
-           return true;
+    }
+
+    fn obt_char(&self, posicion: usize) -> char {  //opcion 4
+        if posicion >= 1 && posicion <= self.longitud {
+            self.caracteres[posicion - 1]
+        } else {
+        '\0'// caracter nulo para indicar error
         }
-
-        if num % 2 == 0 {
-            return false;
+    }
+   fn cant_apar_char(&self, c: char) -> u32 {  //opcion 5
+        let mut contador: u32 = 0;
+        for i in 0..self.longitud {
+            if self.caracteres[i] == c {
+                contador += 1;
+            }
         }
-
-        let t: u64 = (num as f64).sqrt() as u64 + 1;
-        let mut d: u64 = 3;
-
-        while d <= t {
-            if num % d == 0 {
+        contador
+    }    
+    fn car_max_repetido(&self) -> Option<char> {  //opcion 6
+        let mut max_char = '\0';
+        let mut max_count = 0;
+        for i in 0..self.longitud {
+            let c = self.caracteres[i];
+            let count = self.cant_apar_char(c);
+            if count > max_count {
+                max_char = c;
+                max_count = count;
+            }
+        }
+        if max_count > 0 {
+            Some (max_char)
+    
+        } else {
+            None
+        }
+    }
+    fn conv_min_may (&mut self) {  //opcion 7
+        for i in 0..self.longitud {
+            let c = self.caracteres[i];
+            if c >= 'a' && c <= 'z' {
+                self.caracteres[i] = ((c as u8) - 32) as char;
+            }
+        }
+    }
+    
+    fn inv_cadena(&mut self) {  //opcion 8
+        for i in 0..self.longitud / 2 {
+            let temp = self.caracteres[i];
+            self.caracteres[i] = self.caracteres[self.longitud - 1 - i];
+            self.caracteres[self.longitud - 1 - i] = temp;
+        }
+    }
+    fn palindromo(&self) -> bool { //opcion 9
+        let mut texto: [char; N] = ['\0'; N];
+        let mut len: usize = 0;
+        for i in 0..self.longitud {
+            let mut c = self.caracteres[i];
+            if c == ' ' {
+                continue;
+            }
+            if c >= 'A' && c <= 'Z' {
+                c = ((c as u8) + 32) as char;
+            }
+            texto[len] = c;
+            len += 1;
+        }
+        let mut i: usize = 0;
+        while i < len / 2 {
+            if texto[i] != texto[len - 1 - i] {
                 return false;
             }
-            d += 2;
-        };
-
+            i += 1;
+        }
         true
+    }      
+    fn reemplazar_pos_car(&mut self, pos:usize, c: char) {  //opcion 10
+        if pos >= 1 && pos <= self.longitud {
+            self.caracteres[pos - 1] = c;
+        }
     }
 
-    fn cantidad_digitos(&self) -> u64 { //opción 3, devuelve la cantidad de dígitos que tiene el número, ej: 123 → 3, 400 → 3, 9 → 1
-        let mut count: u64 = 0;
-        let mut num: u64 = self.valor;
-
-        while num > 0 {
-            num /= 10;
-            count += 1;
-        }
-
-        count
-    }
-    fn elevado(&self, base: u64, exp: u64) -> u64 { //función auxiliar para calcular la potencia, se utiliza en la función es_armstrong
-        let mut resultado: u64 = 1;
-        for _ in 0..exp {
-            resultado = resultado * base;
-        }
-        resultado
-    }
-    fn invertir(&self) -> u64 { //opción 4, devuelve el número invertido, ej: 123 → 321, 400 → 4, 9 → 9
-        if self.valor < 10 {
-            return self.valor;
-        }
-        else {
-            let mut num = self.valor;
-            let mut invertido = 0;
-
-            while num > 0 {
-                let digito = num % 10;
-                invertido = invertido * 10 + digito;
-                num /= 10;
+    fn reemplazar_car(&mut self, c: char, x: char)  {  //opcion 11
+        for i in 0..self.longitud {
+            if self.caracteres[i] == c {
+                self.caracteres[i] = x;
             }
-            invertido
+        }
+    }
+    fn cont_voc_cons(&self) -> (u32, u32) {  //opcion 12
+        let mut vocales: u32 = 0;
+        let mut consonantes: u32 = 0;
+
+        for i in 0..self.longitud {
+            let c = self.caracteres[i];
+
+            if VOCALES.contains(c) {
+                vocales += 1;
+            } else if ALFABETO.contains(c) {
+                consonantes += 1;
+            }
+        }
+        (vocales, consonantes)
+    }
+       fn eliminar_pos(& mut self, pos:usize) { //opción 13
+            if pos >= 1 && pos <= self.longitud {
+                let index = pos - 1; // ajustar a índice 0
+                for i in index..self.longitud - 1 {
+                    self.caracteres[i] = self.caracteres[i + 1];
+                }
+                self.caracteres[self.longitud - 1] = '\0'; // limpiar el último carácter
+                self.longitud -= 1; // reducir la longitud
+            }
+    }
+
+    fn obtener_subcadena(&self, inicio: usize, fin: usize) -> Cadena { //opción 14
+            let mut subcadena = Cadena::new();
+            if inicio >= 1 && fin <= self.longitud && inicio <= fin {
+                for i in (inicio - 1)..fin {
+                    subcadena.add_char(self.caracteres[i]);
+                }
+            }
+            subcadena
+    }
+        
+    fn inv_cadena_mas_la_primer_letra(&mut self) { //opción 15 
+       if self.longitud == 0 {return;}
+       let ult_char: char = self.caracteres[self.longitud - 1];
+       self.inv_cadena();
+       self.longitud +=1;
+       self.caracteres[self.longitud - 1] = ult_char;        
+    }
+    fn verMAY(&self, c: char)->bool{
+        if c>='A' && c<='Z' || c=='Ñ'{
+         true
+        }
+        else{
+            false
         }
     }
 
-    fn es_capicua(&self) -> bool { //opción 5, devuelve true si el número es capicúa, false en caso contrario
-        self.valor == self.invertir()
-    }
-
-    fn es_elevado(&self, base: u64, exp: u64) -> u64 { //función auxiliar para calcular la potencia, se utiliza en la función es_armstrong
-        let mut resultado: u64 = 1;
-        for _ in 0..exp {
-            resultado *= base;
+    fn verminu(&self, c: char)->bool{
+        if c>='a' && c<='z' || c== 'ñ'{
+         true
         }
-        resultado
-    }
-
-    fn es_armstrong(&self) -> bool { //opción 6, devuelve true si el número es un número de Armstrong, false en caso contrario
-        let mut n = self.valor;
-        let mut suma = 0;
-        let expo: u64 = self.cantidad_digitos();
-
-        while n > 0 {
-            let digito = n % 10;
-            suma = suma + self.elevado(digito, expo);
-            n /= 10; // esto es igual a: n = n / 10;
+        else{
+            false
         }
-        suma == self.valor
+    }
+    
+    fn encriptador_cesar(&mut self, c : usize) { //opción 16
+    let minus = ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','ñ','o','p','q','r','s','t','u','v','w','x','y','z'];
+    let mayus = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','Ñ','O','P','Q','R','S','T','U','V','W','X','Y','Z'];
+    
+    for i in 0..self.longitud {
+    //mayuscula
+        if self.verMAY(self.caracteres[i]) {
+            for j in 0..27 {
+                if self.caracteres[i] == mayus[j] {
+                    if j > 23 { 
+                        self.caracteres[i] = mayus[j + c - 24];
+                    } else {
+                        self.caracteres[i] = mayus[j + c];
+                    }
+                    break;
+                }
+            }
+
+    //minuscula
+        } else if self.verminu(self.caracteres[i]) {
+
+            for j in 0..27 {
+                if self.caracteres[i] == minus[j] {
+                    if j > 23 { 
+                        self.caracteres[i] = minus[j + c - 24];
+                    } else {
+                        self.caracteres[i] = minus[j + c];
+                    }
+                    break;
+                }
+            }
+
+        }
+    }
+}
+
+
+    //    fn insertar_subcadena(&mut self, sub: &Cadena, p: usize) {
+    //        if p >0 && p <= self.longitud + 1 && self.longitud + sub.longitud <= N{
+    //            for i in (p - 1..self.longitud).rev() {
+    //                self.caracteres[i + sub.longitud] = self.caracteres[i];
+    //            }
+    //            for i in 0..self.longitud {
+    //                self.caracteres[p - 1 + i] = sub.caracteres[i];
+    //            }
+    //            self.longitud += t;
+    //        }
+    //    }
+
+       //            for i in (p..self.longitud).rev() { self.caracteres[i + t] = self.caracteres[i]; }
+    //            for i in 0..sub.longitud { self.caracteres[p + i] = sub.caracteres[i]; }
+    //            if e { self.caracteres[p + sub.longitud] = ' '; }
+    //            self.longitud += t;
+    //        }
+    //    }
+    //}
+
+    //    fn insertar_subcadena(&mut self, sub: &Cadena, pos: usize) {
+    //    if pos > 0 && pos <= self.longitud + 1 {
+    //        let e = pos <= self.longitud && self.caracteres[pos - 1] == ' ';
+     //       let p = pos - 1 + e as usize;
+     //       let t = sub.longitud + e as usize;
+      //      if self.longitud + t <= N {
+    //            for i in (p..self.longitud).rev() { self.caracteres[i + t] = self.caracteres[i]; }
+    //            for i in 0..sub.longitud { self.caracteres[p + i] = sub.caracteres[i]; }
+    //            if e { self.caracteres[p + sub.longitud] = ' '; }
+    //            self.longitud += t;
+    //        }
+    //    }
+    //}
+
+
+
+
+
+        fn insertar_subcadena(&mut self, sub:&Cadena, p: usize){
+           if p > 0 && p <= self.longitud + 1 {
+            let e = p <= self.longitud && self.caracteres[p - 1] ==' ';
+            let k = p - 1 + e as usize;
+            let t = sub.longitud + e as usize;
+            if self.longitud + t <=N {
+                for i in (k..self.longitud).rev() {
+                    self.caracteres[i + t] = self.caracteres[i];
+                }
+                for i in 0..sub.longitud {
+                    self.caracteres[k + i] = sub.caracteres[i];
+                }
+                if e {
+                    self.caracteres[k + sub.longitud] = ' ';
+                }
+                self.longitud += t;
+            }
+           } 
     } 
 
-    //funcion que devuelva la cantidad de digitos pares que contiene un numero, ej:
-    //341 = 1 digito par - 379 = 0 digitos pares - 482 = 3 digitos pares.
-    fn cant_dig_pares(&self) -> u64 { //opción 7, devuelve la cantidad de dígitos pares que tiene el número
-        let mut num = self.valor;
-        let mut cont = 0;
-
-        while num > 0 {
-            let digito = num % 10;
-            if digito % 2 == 0 {
-                cont += 1;
-            }
-            num /= 10;
-        }
-        cont
-    }
-
-    fn raiz_digital(&self) -> u64 { //opción 8, devuelve la raíz digital del número
-        let mut n: u64 = self.valor;
-        while n >= 10 {
-            let mut suma = 0;
-            let mut temp = n;
-            while temp > 0 {
-                suma = suma + (temp % 10);
-                temp = temp / 10;
-            }
-            n = suma;
-        }
-        n
-    }
-
-    //1.- La conjetura de Collatz: Si el número es par, divídelo entre 2; si es impar, multiplícalo por 3
-    //y súmale 1. Repetir hasta llegar a 1. Implementar un método que cuente los pasos necesarios y otro que
-    //encuentre el valor máximo alcanzado durante la secuencia.
-    
-    fn collatz(&self) -> (u64, u64) { //opción 9, devuelve una tupla con el número de pasos y el máximo alcanzado
-    let mut n = self.valor;
-    let mut pasos: u64 = 0;
-    let mut maximo: u64 = 0;
-
-      while n != 1 {
-        if n % 2 == 0 {
-            n = n / 2;
-        } else {
-            n = n * 3 + 1;
-        }
-        pasos += 1;
-        if n > maximo {
-            maximo = n;
-        }
-      }
-      (pasos,  maximo)
+    // limpia la cadena para poder ingresar una nueva
+    fn limpiar(&mut self) {
+        self.longitud = 0;
+        self.caracteres = ['\0'; N];
     }
 
 
-    fn insertar_digito(&self, digito: u64, posicion: u64) -> u64 {//opción 10
-    let total_cifras = self.cantidad_digitos();
+    //p <= self.longitud && self.longitud[p - 1] = ' ';
 
-    let mut divisor: u64 = 1;
-
-    for _ in 0..(total_cifras - posicion + 1) {  // ← +1 para que la posición empiece en 1
-        divisor = divisor * 10;
+    // muestra la cadena completa carácter por carácter
+    fn mostrar(&self) {
+        for i in 0..self.longitud {
+            print!("{}", self.caracteres[i]);
+        }
+        println!();
     }
-
-    let parte_izquierda = self.valor / divisor;
-    let parte_derecha   = self.valor % divisor;
-
-    parte_izquierda * divisor * 10 + digito * divisor + parte_derecha
 }
 
-    fn obtener_digito_posicion(&self, posicion: u64) -> u64 { //opción 11
-        let total = self.cantidad_digitos();
-        if posicion < 1 || posicion > total {
-            return 0;
-        }
-        (self.valor / 10u64.pow((total - posicion) as u32)) % 10
-    }
-
-    fn buscar_digito(&self, digito: u64) -> u64 { //opción 12
-        let total = self.cantidad_digitos();
-        for i in 1..=total {
-            let digit = (self.valor / 10u64.pow((total - i) as u32)) % 10;
-            if digit == digito {
-                return i;
-            }
-        }
-        0
-    }
-    fn rotar_todos_los_numeros_n_veces_izquierda(&self, n: u64) -> u64 { //opción 13 eje-> 12345 "rotar 3" -> 45123
-        let mut valor: u64 = self.valor;
-        for _ in 0..n {
-        let dig: u64 = self.cantidad_digitos();
-        let k :u64 = self.es_elevado(10 ,dig-1);
-        let div : u64 = valor / k;
-        valor = (valor % k) * 10 + div;     
-        }
-        valor 
-    }
-
-    fn resetear(&mut self, nuevo: u64) {
-        self.valor = nuevo;
-    }
-}
-// Función para leer una línea de entrada del usuario
+// ── helpers de entrada ──────────────────────────────────────────────
 fn leer_linea() -> String {
     let mut entrada = String::new();
     io::stdin().read_line(&mut entrada).expect("Error al leer");
     entrada.trim().to_string()
 }
-// Función para leer un número u64 del usuario, devuelve None si no es válido
-fn leer_numero() -> Option<u64> {
-    leer_linea().parse::<u64>().ok()
+
+fn leer_numero() -> Option<usize> {
+    leer_linea().parse::<usize>().ok()
 }
 
-fn mostrar_menu(n: &Numero) {
+// ── menú ────────────────────────────────────────────────────────────
+fn mostrar_menu(c: &Cadena) {
+    // construimos la cadena actual para mostrarla en el encabezado
+    let mut preview = String::new();
+    for i in 0..c.longitud {
+        preview.push(c.caracteres[i]);
+    }
+    if preview.is_empty() {
+        preview = String::from("(vacía)");
+    }
+
     println!("\n╔══════════════════════════════════╗");
-    println!("║   NÚMERO ACTUAL: {:>14}  ║", n.valor);
+    println!("║   CADENA: {:>22}  ║", preview);
     println!("╠══════════════════════════════════╣");
-    println!("║  Consulta                        ║");
-    println!("║  1. ¿Es par?                     ║");
-    println!("║  2. ¿Es primo?                   ║");
-    println!("║  3. Cantidad de dígitos          ║");
-    println!("║  4. Invertir                     ║");
-    println!("║  5. Es capicua?                  ║");    
-    println!("║  6. ¿Es Armstrong?               ║");
-    println!("║  7. Cantidad Dig Par             ║");
-    println!("║  8. Raiz Digital                 ║");
-    println!("║  9. Collatz                      ║");
-    println!("║  10. Insertar dígito             ║");
-    println!("║  11. Obtener dígito en posición  ║");
-    println!("║  12. Buscar dígito               ║");
-    println!("║  13. Rotar numeros a la izquierda║");
+    println!("║  1. Ingresar nueva cadena        ║");
+    println!("║  2. Mostrar cadena               ║");
+    println!("║  3. Longitud                     ║");
+    println!("║  4. Obtener carácter (posición)  ║");
+    println!("║  5. Contar apariciones           ║");
+    println!("║  6. Caracter mas repetido        ║");
+    println!("║  7. Convertir a mayúsculas       ║");
+    println!("║  8. Invertir cadena              ║");
+    println!("║  9. Verificar palíndromo         ║");
+    println!("║ 10. Reemplazar carácter          ║");
+    println!("║ 11. Reemplazar carácter por otro ║");
+    println!("║ 12. Contar vocales y consonantes ║");
+    println!("║ 13. Extraer subcadena            ║");
+    println!("║ 14. Eliminar carácter en posición║");
+    println!("║ 15. Invertir cadena + n posicion ║");
+    println!("║ 16. Encriptar con César          ║");
+    println!("║ 17. Insertar una subcadena       ║");
     println!("╠══════════════════════════════════╣");
-    println!("║  0. Ingresar nuevo número        ║");
     println!("║  Q. Salir                        ║");
     println!("╚══════════════════════════════════╝");
     print!("   Opción: ");
@@ -240,105 +338,209 @@ fn mostrar_menu(n: &Numero) {
 
 fn main() {
     println!("════════════════════════════════════");
-    println!("  Números - POO — Programación I");
+    println!("  Cadenas - POO — Programación I   ");
     println!("════════════════════════════════════");
-    println!("Ingresa un número para comenzar:");
-    // Validar que el usuario ingrese un número válido antes de crear la instancia de Numero
-    let valor_inicial: u64 = loop { //loop se repite hasta que encuentre un break
-        match leer_numero() {
-            Some(num) => break num,
-            None    => println!("Número inválido. Intenta de nuevo:"),
-        }
-    };
-    //creando una instancia de Numero con el valor inicial ingresado por el usuario
-    //ESTA ES LA INSTANCIA DEL OBJETO NUMERO, A PARTIR DE AQUÍ SE UTILIZARÁ PARA REALIZAR TODAS LAS CONSULTAS
-    let mut n =  Numero::new(valor_inicial);
 
-    loop { //el menu se mostrará en un bucle infinito hasta que el usuario decida salir usando la opción 'Q' (break)
-        mostrar_menu(&n);
+    let mut c = Cadena::new(); //definiendo la instancia de tipo Cadena
+
+    loop {
+        mostrar_menu(&c);
         let opcion = leer_linea();
 
-        match opcion.as_str() {  //usando match, se puede llamar a la función correspondiente.
-            // Consultas
-            "1" => println!("  ¿Es par?          → {}", n.es_par()),
-            "2" => println!("  ¿Es primo?        → {}", n.es_primo()),
-            "3" => println!("  Cantidad Digitos: → {}", n.cantidad_digitos()),
-            "4" => println!("  Invertir:         → {}", n.invertir()),
-            "5" => println!("  Es capicua?:      → {}", n.es_capicua()),
-            "6" => println!("  ¿Es Armstrong?    → {}", n.es_armstrong()),
-            "7" => println!("  Cantidad de Digitos Pares es    → {}", n.cant_dig_pares()),
-            "8" => println!("  La raiz gitital es    → {}", n.raiz_digital()),
-            "9" => {
-                   let (pasos, maximo) = n.collatz();
-                    println!("  Collatz → pasos: {}, máximo: {}", pasos, maximo);
-            }
-            "10" => {
-                println!("  Ingresa el dígito a insertar (0-9):");
-                match leer_numero() {
-                    Some(digito) if digito <= 9 => {
-                        println!("  Ingresa la posición (1 = izquierda):");
-                        match leer_numero() {
-                            Some(posicion) => {
-                                let resultado = n.insertar_digito(digito, posicion);
-                                println!("  Insertar dígito {} en posición {}: → {}", digito, posicion, resultado);
-                            }
-                            None => println!("  Posición inválida."),
-                        }
-                    }
-                    Some(_) => println!("  El dígito debe estar entre 0 y 9."),
-                    None    => println!("  Dígito inválido."),
-                }
-            }
-            "11" => {
-    println!("  Ingresa la posición (1 = izquierda):");
-    match leer_numero() {
-        Some(posicion) if posicion >= 1 && posicion <= n.cantidad_digitos() as u64 => {
-            let resultado = n.obtener_digito_posicion(posicion);
-            println!("  Dígito en posición {}: → {}", posicion, resultado);
-        }
-        Some(_) => println!("  Posición no encontrada"),
-        None    => println!("  Posición inválida."),
-    }
-}
+        match opcion.as_str() {
+            "1" => {
+                println!("  Ingresa la cadena:");
+                let entrada = leer_linea();
 
-"12" => {
-    println!("  Ingresa el dígito a buscar (0-9):");
-    match leer_numero() {
-        Some(digito) if digito <= 9 => {
-            let resultado = n.buscar_digito(digito);
-            if resultado == 0 {
-                println!("  El dígito {} no existe en el número.", digito);
-            } else {
-                println!("  Dígito {} encontrado en posición: → {}", digito, resultado);
+                c.limpiar(); // reiniciamos antes de cargar la nueva
+
+                // ── proceso artesanal: carácter por carácter ──
+                for ch in entrada.chars() {
+                    c.add_char(ch);
+                }
+
+                println!("  ✓ Cadena cargada ");
             }
-        }
-        Some(_) => println!("  El dígito debe estar entre 0 y 9."),
-        None    => println!("  Dígito inválido."),
-    }
-}
-            "13" => {
-                println!("  Ingresa la cantidad de veces que deben rotar los dígitos:");
+
+            "2" => {
+                print!("  Cadena: ");
+                c.mostrar();
+            }
+
+            "3" => println!("  Longitud: → {}", c.obt_longitud()),
+
+            "4" => {
+                println!("  Ingresa la posición (1 = izquierda):");
                 match leer_numero() {
-                    Some(cant) => {
-                        let resultado = n.rotar_todos_los_numeros_n_veces_izquierda(cant);
-                        if cant <5 {
-                        println!(" Rotar {} posiciones: → {}", cant, resultado);
+                    Some(pos) if pos >= 1 && pos <= c.obt_longitud() => {
+                        println!("  Carácter en posición {}: → '{}'", pos, c.obt_char(pos));
+                    }
+                    Some(_) => println!("  Posición fuera de rango (1 a {}).", c.obt_longitud()),
+                    None    => println!("  Posición inválida."),
+                }
+            } 
+            
+             "5" => {
+                println!("  Ingresa el carácter a buscar:");
+                let entrada = leer_linea();
+                match entrada.chars().next() {
+                   Some(car) => {
+                      let resultado:u32 = c.cant_apar_char(car);
+                      if resultado > 1 {
+                           println !(" '{}' aparece {} veces", car, resultado);
+                           }else if resultado == 1 {
+                              println!(" aparece 1 vez");
+                               } else {
+                                  println!(" '{}' no aparece en la cadena", car);
+                               }
+                    }
+                       None => {
+                          println!("  No ingresaste ningún carácter.")
+                        }
+                }
+             } 
+                "6" => {
+                    match c.car_max_repetido() {
+                        Some(car) => println!(" El caracter mas repetido es '{}' ", car),
+                        None => println! (" No hay caracteres en la cadena.")
+                    }
+                }
+                "7" => {
+                    c.conv_min_may();
+                    println!(" Cadena convertida a mayusculas.");
+                }
+                "8" => {
+                    c.inv_cadena();
+                    println!(" Cadena invertida.");
+                }
+                "9" => {
+                    if c.palindromo() {
+                        println!(" La cadena es un palíndromo.");
+                    } else {
+                        println!(" La cadena no es un palíndromo.");
+                    }
+                }
+                "10" => {
+                    println!("  Ingresa la posición a reemplazar (1 = izquierda):");
+                    match leer_numero() {
+                        Some(pos) if pos >= 1 && pos <= c.obt_longitud() => {
+                            println!("  Ingresa el nuevo carácter:");
+                            let entrada = leer_linea();
+                            match entrada.chars().next() {
+                                Some(car) => {
+                                    c.reemplazar_pos_car(pos, car);
+                                    println!("  Carácter en posición {} reemplazado por '{}'.", pos, car);
+                                }
+                                None => println!("  No ingresaste ningún carácter."),
+                            }
+                        }
+                        Some(_) => println!("  Posición fuera de rango (1 a {}).", c.obt_longitud()),
+                        None    => println!("  Posición inválida."),
+                    }
+                }
+                "11" => {
+                    println!("  Ingresa el carácter a reemplazar:");
+                    let entrada = leer_linea();
+                    match entrada.chars().next() {
+                        Some(car) => {
+                            println!("  Ingresa el nuevo carácter:");
+                            let entrada2 = leer_linea();
+                            match entrada2.chars().next() {
+                                Some(car2) => {
+                                    c.reemplazar_car(car, car2);
+                                    println!("  Carácter '{}' reemplazado por '{}'.", car, car2);
+                                }
+                                None => println!("  No ingresaste ningún carácter."),
+                            }
+                        }
+                        None => println!("  No ingresaste ningún carácter."),
+                    }
+                }
+                "12" => {
+                    let (vocales, consonantes) = c.cont_voc_cons();
+                    if vocales == 0 && consonantes == 0 {
+                        println!(" La cadena no contiene ningún carácter.");
+                    } else {
+                        println!(" {} Vocales y {} Consonantes", vocales, consonantes);
+                    }
+                }
+                
+                "13" => {
+                    if c.obt_longitud() == 0 {
+                        println!(" La cadena está vacía.");
+                    } else {
+                        println!(" Ingresa la posición de inicio (1-based):");
+                        if let Some(inicio) = leer_numero() {
+                            println!(" Ingresa la posición final:");
+                            if let Some(fin) = leer_numero() {
+                                let sub = c.obtener_subcadena(inicio, fin);
+                                print!(" Subcadena extraída: ");
+                                sub.mostrar();
+                            } else {
+                                println!(" Posición inválida.");
+                            }
                         } else {
-                        println!(" Rotar {} posiciones es igual a rotar {} posiciones: → {}", cant, cant-5, resultado);    
+                            println!(" Posición inválida.");
                         }
                     }
-                    None => println!("  Número de rotaciones inválido."),
                 }
-            }
-            "0" => {
-                println!("  Ingresa el nuevo número:");
-                match leer_numero() {
-                    Some(num) => { n.resetear(num); println!("  ✓ Nuevo número: {}", n.valor); }
-                    None    => println!("  Número inválido, se mantiene {}", n.valor),
+
+                "14" => {
+                    if c.obt_longitud() == 0 {
+                        println!(" La cadena está vacía.");
+                    } else {
+                        println!(" Ingresa la posición a eliminar (1-based):");
+                        match leer_numero() {
+                            Some(pos) if pos >= 1 && pos <= c.obt_longitud() => {
+                                c.eliminar_pos(pos);
+                                print!(" Cadena resultante: ");
+                                c.mostrar();
+                            }
+                            Some(_) => println!(" Posición fuera de rango (1 a {}).", c.obt_longitud()),
+                            None => println!(" Posición inválida."),
+                        }
+                    }
+                } 
+                "15" => {
+                    c.inv_cadena_mas_la_primer_letra();
+                    println!(" Cadena invertida mas la primer letra");
+                } 
+                "16" => {
+                    println!(" Ingresa el número de posiciones para encriptar (1-26):");
+                    match leer_numero() {
+                        Some(cifrado) if cifrado >= 1 && cifrado <= 26 => {
+                            c.encriptador_cesar(cifrado);
+                            println!(" Cadena encriptada con César.");
+                        }
+                        Some(_) => println!(" Número fuera de rango (1-26)."),
+                        None => println!(" Número inválido."),
+                    }
                 }
-            }
-            "q" | "Q" => { println!("\n  Hasta luego.\n"); break; } //aquí se rompe el ciclo con "q" o "Q"
-            _ => println!("  Opción no válida."),
+                "17" => {
+                    if c.obt_longitud() == 0 {
+                        println!(" La cadena está vacía.");
+                    } else {
+                        println!(" Ingresa la subcadena a insertar:");
+                        let mut subcadena = Cadena::new();
+                        let entrada = leer_linea();
+                        for ch in entrada.chars() {
+                            subcadena.add_char(ch);
+                        }
+                        println!(" Ingresa la posición para insertar la subcadena (1 = izquierda):");
+                        match leer_numero() {
+                            Some(pos) if pos >= 1 && pos <= c.obt_longitud() + 1 => {
+                                c.insertar_subcadena(&subcadena, pos);
+                                print!(" Cadena resultante: ");
+                                c.mostrar();
+                            }
+                            Some(_) => println!(" Posición fuera de rango (1 a {}).", c.obt_longitud() + 1),
+                            None => println!(" Posición inválida."),
+                        }
+                    }
+                }
+
+            "q" | "Q" => { println!("\n  Hasta luego.\n"); break; }
+            _          => println!("  Opción no válida."),
         }
     }
 }

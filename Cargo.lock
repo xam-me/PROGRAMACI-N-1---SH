@@ -3,5 +3,5 @@
 version = 4
 
 [[package]]
-name = "Numeros"
+name = "Rust"
 version = "0.1.0"
