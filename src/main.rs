@@ -1,344 +1,585 @@
-    use std::io::{self, Write};  // Para leer entrada y mostrar el menú sin salto de línea
-struct Numero {
-    valor: u64
+const NF: usize = 120;
+const NC: usize = 120;
+
+struct Matriz {
+    nro_filas:    usize,
+    nro_columnas: usize,
+    elemento: [[u64; NC]; NF],
 }
 
-impl Numero {
-    fn new(valor: u64) -> Self {
-        Numero { valor }
+impl Matriz {
+    fn new(nro_filas: usize, nro_columnas: usize) -> Matriz {
+        Matriz {
+            nro_filas,
+            nro_columnas,
+            elemento: [[0; NC]; NF],
+        }
     }
 
-    fn es_par(&self) -> bool { //opción 1, devuelve true si el número es par, false en caso contrario
-        self.valor % 2 == 0
+    fn obt_nro_filas(&self) -> usize {
+        self.nro_filas
     }
 
-    fn es_primo(&self) -> bool { //opción 2, devuelve true si el número es primo, false en caso contrario
-        let num: u64 = self.valor;
+    fn obt_nro_columnas(&self) -> usize {
+        self.nro_columnas
+    }
 
-        if num < 2 {
-            return false;
-        }
-        if num == 2 {
-           return true;
-        }
+    // leer celda
+    fn get_celda(&self, f: usize, c: usize) -> u64 {
+        self.elemento[f][c]
+    }
 
-        if num % 2 == 0 {
-            return false;
-        }
-
-        let t: u64 = (num as f64).sqrt() as u64 + 1;
-        let mut d: u64 = 3;
-
-        while d <= t {
-            if num % d == 0 {
-                return false;
+    // escribir celda
+    fn set_celda(&mut self, f: usize, c: usize, valor: u64) {
+        self.elemento[f][c] = valor;
+    }
+    
+    fn summar_elementos(&self) -> u64 {
+        let mut suma=0;
+        for i in 0..self.obt_nro_filas() {
+            for j in 0..self.obt_nro_columnas(){
+                suma += self.elemento[i][j];
             }
-            d += 2;
-        };
+        }
+        suma
+    }
 
+    // ── Mostrar ───────────────────────────────────────────────────
+
+    fn mostrar(&self) {
+        println!();
+        for f in 0..self.nro_filas {
+            print!("  ");
+            for _ in 0..self.nro_columnas {
+                print!("┌─────────┐");
+            }
+            println!();
+            print!("  ");
+            for c in 0..self.nro_columnas {
+                print!("│{:^9}│", self.elemento[f][c]);
+            }
+            println!();
+            print!("  ");
+            for _ in 0..self.nro_columnas {
+                print!("└─────────┘");
+            }
+            println!();
+        }
+        print!("  ");
+        for c in 0..self.nro_columnas {
+            print!("{:^11}", format!("c{}", c));
+        }
+        println!("\n");
+    }
+
+    fn sumar_pares(&self) -> u64 {
+        let mut suma = 0;
+        for i in 0..self.obt_nro_filas() {
+            for j in 0..self.obt_nro_columnas() {
+                if self.elemento[i][j] % 2 == 0 {
+                    suma += self.elemento[i][j];
+                }
+            }
+        }
+        suma
+    }
+
+    fn sumar_impares(&self) -> u64 {
+        let mut suma = 0;
+        for i in 0..self.obt_nro_filas() {
+            for j in 0..self.obt_nro_columnas() {
+                if self.elemento[i][j] % 2 != 0 {
+                    suma += self.elemento[i][j];
+                }
+            }
+        }
+        suma
+    }
+
+    fn elemento_mayor(&self) -> u64 {
+        let mut mayor = self.elemento[0][0];
+        for i in 0..self.obt_nro_filas() {
+            for j in 0..self.obt_nro_columnas() {
+                if self.elemento[i][j] > mayor {
+                    mayor = self.elemento[i][j];
+                }
+            }
+        }
+        mayor
+    }
+
+    fn sumar_columna(&self, columna : usize) -> u64 {
+        let mut suma = 0;
+        for fila in 0..self.obt_nro_filas() {
+            suma += self.elemento[fila][columna];
+        }
+        suma
+    }
+
+    fn sumar_fila(&self, fila:usize ) -> u64 {
+        let mut suma = 0;
+        for columna in 0..self.obt_nro_columnas() {
+            suma += self.elemento[fila][columna];    
+        }
+        suma
+    }
+
+    
+
+    fn esta_ordenada(&self) -> bool {
+        let filas = self.nro_filas;
+        let columnas = self.nro_columnas;
+        
+        // Recorrer toda la matriz
+        for i in 0..filas {
+            for j in 0..columnas {
+                let actual = self.elemento[i][j];
+                
+                // Verificar siguiente elemento (si existe)
+                if j + 1 < columnas {
+                    // Misma fila, siguiente columna
+                    if actual > self.elemento[i][j + 1] {
+                        return false;
+                    }
+                } else if i + 1 < filas {
+                    // Última columna, pasar a siguiente fila
+                    if actual > self.elemento[i + 1][0] {
+                        return false;
+                    }
+                }
+            }
+        }
         true
     }
 
-    fn cantidad_digitos(&self) -> u64 { //opción 3, devuelve la cantidad de dígitos que tiene el número, ej: 123 → 3, 400 → 3, 9 → 1
-        let mut count: u64 = 0;
-        let mut num: u64 = self.valor;
-
-        while num > 0 {
-            num /= 10;
-            count += 1;
+    fn sumar_borde(&self) -> u64 {
+    let mut suma = 0;
+    let filas = self.nro_filas;
+    let columnas = self.nro_columnas;
+    for i in 0..filas {
+        for j in 0..columnas {
+            if i == 0 || i == filas - 1 || j == 0 || j == columnas - 1 {
+                suma += self.elemento[i][j];
+            }
         }
+    }
+    suma
+}
 
-        count
-    }
-    fn elevado(&self, base: u64, exp: u64) -> u64 { //función auxiliar para calcular la potencia, se utiliza en la función es_armstrong
-        let mut resultado: u64 = 1;
-        for _ in 0..exp {
-            resultado = resultado * base;
+    pub fn busqueda_binaria(&self, ele:u64)->Option<(usize,usize)>{
+        println!("Buscando {} en la matriz...", ele);
+        if !self.esta_ordenada() {
+        println!("La matriz no está ordenada, El resultado podría ser incorrecto");
         }
-        resultado
+        let mut ini:usize = 0;
+        let mut fin:usize = self.nro_columnas * self.nro_filas -1;
+        while ini <= fin {
+            let medio = (ini + fin) / 2;
+            let fila = medio / self.nro_columnas;
+            let col = medio % self.nro_columnas;
+            let valor = self.elemento[fila][col];
+            if valor == ele{
+                return Some((fila, col));
+            }
+            if ele < valor {
+                if medio == 0{
+                    break;
+                }
+                fin  = medio-1;
+            }else{
+                ini = medio +1;
+            }
+
+        }
+        None
     }
-    fn invertir(&self) -> u64 { //opción 4, devuelve el número invertido, ej: 123 → 321, 400 → 4, 9 → 9
-        if self.valor < 10 {
-            return self.valor;
+
+        fn ordenar_espiral(&mut self) {
+        let filas = self.nro_filas;
+        let columnas = self.nro_columnas;
+        let total_elementos = filas * columnas;
+        let mut elementos: Vec<u64> = Vec::with_capacity(total_elementos);
+        for i in 0..filas {
+            for j in 0..columnas {
+                elementos.push(self.elemento[i][j]);
+            }
+        }
+        
+        elementos.sort();
+        
+        let posiciones = self.generar_posiciones_espiral();
+        
+        for (idx, (fila, col)) in posiciones.iter().enumerate() {
+            self.elemento[*fila][*col] = elementos[idx];
+        }
+    }
+
+    fn generar_posiciones_espiral(&self) -> Vec<(usize, usize)> {
+        let filas = self.nro_filas;
+        let columnas = self.nro_columnas;
+        let mut posiciones: Vec<(usize, usize)> = Vec::new();
+        
+        let centro_fila = filas / 2;
+        let centro_col = columnas / 2;
+        
+        let mut visitado = vec![vec![false; columnas]; filas];
+        
+        let direcciones = [(0, 1), (1, 0), (0, -1), (-1, 0)];
+        let mut dir_idx = 0;
+        
+        let mut fila = centro_fila;
+        let mut col = centro_col;
+        let mut paso = 1;
+        
+        visitado[fila][col] = true;
+        posiciones.push((fila, col));
+        
+        while posiciones.len() < filas * columnas {
+            for _ in 0..paso {
+                let nueva_fila = fila as isize + direcciones[dir_idx].0;
+                let nueva_col = col as isize + direcciones[dir_idx].1;
+                
+                if nueva_fila >= 0 && nueva_fila < filas as isize && 
+                   nueva_col >= 0 && nueva_col < columnas as isize {
+                    
+                    let f = nueva_fila as usize;
+                    let c = nueva_col as usize;
+                    
+                    if !visitado[f][c] {
+                        visitado[f][c] = true;
+                        posiciones.push((f, c));
+                        fila = f;
+                        col = c;
+                    } else {
+                        break;
+                    }
+                } else {
+                    break;
+                }
+            }
+
+            dir_idx = (dir_idx + 1) % 4;
+            
+            if dir_idx % 2 == 0 {
+                paso += 1;
+            }
+        }
+        
+        posiciones
+    }
+
+    fn suma_diagonal_mayor(&self)->u64{
+    let mut mayor = 0;
+    
+    for n in 0..(self.nro_filas + self.nro_columnas - 1){
+        let mut suma = 0;
+        let mut i;
+        let mut j;
+        if n < self.nro_filas {
+            i = n;
+            j = 0;
         }
         else {
-            let mut num = self.valor;
-            let mut invertido = 0;
-
-            while num > 0 {
-                let digito = num % 10;
-                invertido = invertido * 10 + digito;
-                num /= 10;
+            i = self.nro_filas-1;
+            j = n - self.nro_filas + 1;
+        }
+        while i < self.nro_filas && j < self.nro_columnas {
+            suma += self.elemento[i][j];
+            if i == 0 {
+                break;
             }
-            invertido
+            i -= 1;
+            j += 1;
+        }
+        if suma > mayor{
+            mayor = suma;
         }
     }
+    return mayor;
+}
 
-    fn es_capicua(&self) -> bool { //opción 5, devuelve true si el número es capicúa, false en caso contrario
-        self.valor == self.invertir()
-    }
+    fn prom_diagonal_mayor_der(&self) -> f64 {
+    let mut mayor = 0;
+    let mut cantidad_mayor = 0;
 
-    fn es_elevado(&self, base: u64, exp: u64) -> u64 { //función auxiliar para calcular la potencia, se utiliza en la función es_armstrong
-        let mut resultado: u64 = 1;
-        for _ in 0..exp {
-            resultado *= base;
-        }
-        resultado
-    }
-
-    fn es_armstrong(&self) -> bool { //opción 6, devuelve true si el número es un número de Armstrong, false en caso contrario
-        let mut n = self.valor;
+    for n in 0..(self.nro_filas + self.nro_columnas - 1) {
         let mut suma = 0;
-        let expo: u64 = self.cantidad_digitos();
-
-        while n > 0 {
-            let digito = n % 10;
-            suma = suma + self.elevado(digito, expo);
-            n /= 10; // esto es igual a: n = n / 10;
+        let mut cantidad = 0;
+        let mut i;
+        let mut j;
+        if n < self.nro_filas {
+            i = n;
+            j = 0;
         }
-        suma == self.valor
-    } 
-
-    //funcion que devuelva la cantidad de digitos pares que contiene un numero, ej:
-    //341 = 1 digito par - 379 = 0 digitos pares - 482 = 3 digitos pares.
-    fn cant_dig_pares(&self) -> u64 { //opción 7, devuelve la cantidad de dígitos pares que tiene el número
-        let mut num = self.valor;
-        let mut cont = 0;
-
-        while num > 0 {
-            let digito = num % 10;
-            if digito % 2 == 0 {
-                cont += 1;
+        else {
+            i = self.nro_filas - 1;
+            j = n - self.nro_filas + 1;
+        }
+        while i < self.nro_filas && j < self.nro_columnas {
+            suma += self.elemento[i][j];
+            cantidad += 1;
+            if i == 0 {
+                break;
             }
-            num /= 10;
+            i -= 1;
+            j += 1;
         }
-        cont
+        if suma > mayor {
+            mayor = suma;
+            cantidad_mayor = cantidad;
+        }
     }
 
-    fn raiz_digital(&self) -> u64 { //opción 8, devuelve la raíz digital del número
-        let mut n: u64 = self.valor;
-        while n >= 10 {
-            let mut suma = 0;
-            let mut temp = n;
-            while temp > 0 {
-                suma = suma + (temp % 10);
-                temp = temp / 10;
-            }
-            n = suma;
+    return mayor as f64 / cantidad_mayor as f64;
+}
+
+    fn prom_diagonal_mayor_izq(&self) -> f64 {
+    let mut mayor = 0;
+    let mut cantidad_mayor = 0;
+
+    for n in 0..(self.nro_filas + self.nro_columnas - 1) {
+        let mut suma = 0;
+        let mut cantidad = 0;
+        let mut i;
+        let mut j;
+        if n < self.nro_filas {
+            i = n;
+            j = self.nro_columnas - 1;
         }
-        n
+        else {
+            i = self.nro_filas - 1;
+            j = self.nro_columnas - 1 - (n - self.nro_filas + 1);
+        }
+        while i < self.nro_filas && j < self.nro_columnas {
+            suma += self.elemento[i][j];
+            cantidad += 1;
+            if i == 0 || j == 0 {
+                break;
+            }
+            i -= 1;
+            j -= 1;
+        }
+        if suma > mayor {
+            mayor = suma;
+            cantidad_mayor = cantidad;
+        }
     }
 
-    //1.- La conjetura de Collatz: Si el número es par, divídelo entre 2; si es impar, multiplícalo por 3
-    //y súmale 1. Repetir hasta llegar a 1. Implementar un método que cuente los pasos necesarios y otro que
-    //encuentre el valor máximo alcanzado durante la secuencia.
+    return mayor as f64 / cantidad_mayor as f64;
+}
+
+fn rotar_borde(&mut self) {
+    let rows = self.nro_filas;
+    let cols = self.nro_columnas;
+    let mut coordenadas = Vec::new();
+
+    for c in 0..cols {
+        coordenadas.push((0, c));
+    }
+    for f in 1..rows {
+        coordenadas.push((f, cols - 1));
+    }
+    for c in (0..cols - 1).rev() {
+        coordenadas.push((rows - 1, c));
+    }
+    for f in (1..rows - 1).rev() {
+        coordenadas.push((f, 0));
+    }
+    let mut valores: Vec<u64> = coordenadas
+        .iter()
+        .map(|&(f, c)| self.elemento[f][c])
+        .collect();
+    valores.rotate_right(8);
+    for (i, &(f, c)) in coordenadas.iter().enumerate() {
+        self.elemento[f][c] = valores[i];
+    }
+}
+
+    fn rotar_anillo_interno(&mut self) {
+        let fil = self.nro_filas;
+        let cols = self.nro_columnas;
+        let mut coordenadas = Vec::new();
+
+        for c in 1..cols - 1 {
+        coordenadas.push((1, c));
+        }
+        for f in 2..fil - 1 {
+        coordenadas.push((f, cols - 2));
+        }
+        for c in (1..cols-2).rev() {
+        coordenadas.push((fil-2,c))    
+        }
+        for f in (2..fil - 2).rev() {
+        coordenadas.push((f, 1));
+        }
+        let mut valores: Vec<u64> = coordenadas
+          .iter()
+          .map(|&(f, c)| self.elemento[f][c])
+          .collect();
+        valores.rotate_right(3);
+        for (i , &(f,c)) in coordenadas.iter().enumerate() {
+        self.elemento[f][c] = valores[i];
+    }
+}
+
+    fn transponer(&self) -> Matriz {
+        let mut nueva = Matriz::new(self.nro_columnas, self.nro_filas);
+        for i in 0..self.nro_filas {
+            for j in 0..self.nro_columnas {
+                nueva.set_celda(j, i, self.elemento[i][j]);
+            }
+        }
+        nueva
+    }
+
+    // Función auxiliar para verificar si un número es primo
+fn es_primo(num: u64) -> bool {
+    if num < 2 {
+        return false;
+    }
+    for i in 2..=((num as f64).sqrt() as u64) {
+        if num % i == 0 {
+            return false;
+        }
+    }
+    true
+}
+
+    // Cuenta cuántos números primos hay en la matriz
+fn contar_primos(&self) -> usize {
+    let mut contador = 0;
+    for i in 0..self.nro_filas {
+        for j in 0..self.nro_columnas {
+            if Self::es_primo(self.elemento[i][j]) {
+                contador += 1;
+            }
+        }
+    }
+    contador
+}
+
+    // Gira la matriz 90 grados a la derecha
+    fn girar_90_grados(&mut self) {
+        let n = self.nro_filas;
+        let mut nueva = Matriz::new(n, n);
     
-    fn collatz(&self) -> (u64, u64) { //opción 9, devuelve una tupla con el número de pasos y el máximo alcanzado
-    let mut n = self.valor;
-    let mut pasos: u64 = 0;
-    let mut maximo: u64 = 0;
-
-      while n != 1 {
-        if n % 2 == 0 {
-            n = n / 2;
-        } else {
-            n = n * 3 + 1;
-        }
-        pasos += 1;
-        if n > maximo {
-            maximo = n;
-        }
-      }
-      (pasos,  maximo)
-    }
-
-
-    fn insertar_digito(&self, digito: u64, posicion: u64) -> u64 {//opción 10
-    let total_cifras = self.cantidad_digitos();
-
-    let mut divisor: u64 = 1;
-
-    for _ in 0..(total_cifras - posicion + 1) {  // ← +1 para que la posición empiece en 1
-        divisor = divisor * 10;
-    }
-
-    let parte_izquierda = self.valor / divisor;
-    let parte_derecha   = self.valor % divisor;
-
-    parte_izquierda * divisor * 10 + digito * divisor + parte_derecha
-}
-
-    fn obtener_digito_posicion(&self, posicion: u64) -> u64 { //opción 11
-        let total = self.cantidad_digitos();
-        if posicion < 1 || posicion > total {
-            return 0;
-        }
-        (self.valor / 10u64.pow((total - posicion) as u32)) % 10
-    }
-
-    fn buscar_digito(&self, digito: u64) -> u64 { //opción 12
-        let total = self.cantidad_digitos();
-        for i in 1..=total {
-            let digit = (self.valor / 10u64.pow((total - i) as u32)) % 10;
-            if digit == digito {
-                return i;
+        for i in 0..n {
+            for j in 0..n {
+                nueva.set_celda(j, n - 1 - i, self.elemento[i][j]);
             }
         }
-        0
+        *self = nueva;
     }
-    fn rotar_todos_los_numeros_n_veces_izquierda(&self, n: u64) -> u64 { //opción 13 eje-> 12345 "rotar 3" -> 45123
-        let mut valor: u64 = self.valor;
-        for _ in 0..n {
-        let dig: u64 = self.cantidad_digitos();
-        let k :u64 = self.es_elevado(10 ,dig-1);
-        let div : u64 = valor / k;
-        valor = (valor % k) * 10 + div;     
+
+    // Cuenta cuántas veces aparece cada número
+    fn frecuencias(&self) -> std::collections::HashMap<u64, usize> {
+        let mut frecuencias = std::collections::HashMap::new();
+        for i in 0..self.nro_filas {
+            for j in 0..self.nro_columnas {
+                *frecuencias.entry(self.elemento[i][j]).or_insert(0) += 1;
+            }
         }
-        valor 
+        frecuencias
     }
 
-    fn resetear(&mut self, nuevo: u64) {
-        self.valor = nuevo;
+    // Verifica si la matriz es mágica (todas las filas, columnas y diagonales suman lo mismo)
+fn es_magica(&self) -> bool {
+    if self.nro_filas != self.nro_columnas {
+        return false;
     }
-}
-// Función para leer una línea de entrada del usuario
-fn leer_linea() -> String {
-    let mut entrada = String::new();
-    io::stdin().read_line(&mut entrada).expect("Error al leer");
-    entrada.trim().to_string()
-}
-// Función para leer un número u64 del usuario, devuelve None si no es válido
-fn leer_numero() -> Option<u64> {
-    leer_linea().parse::<u64>().ok()
+    
+    let n = self.nro_filas;
+    let suma_esperada: u64 = (0..n).map(|i| self.elemento[i][i]).sum();
+    
+    // Verificar filas
+    for i in 0..n {
+        let suma_fila: u64 = (0..n).map(|j| self.elemento[i][j]).sum();
+        if suma_fila != suma_esperada {
+            return false;
+        }
+    }
+    
+    // Verificar columnas
+    for j in 0..n {
+        let suma_col: u64 = (0..n).map(|i| self.elemento[i][j]).sum();
+        if suma_col != suma_esperada {
+            return false;
+        }
+    }
+    
+    // Verificar diagonal secundaria
+    let suma_secundaria: u64 = (0..n).map(|i| self.elemento[i][n - 1 - i]).sum();
+    if suma_secundaria != suma_esperada {
+        return false;
+    }
+    
+    true
 }
 
-fn mostrar_menu(n: &Numero) {
-    println!("\n╔══════════════════════════════════╗");
-    println!("║   NÚMERO ACTUAL: {:>14}  ║", n.valor);
-    println!("╠══════════════════════════════════╣");
-    println!("║  Consulta                        ║");
-    println!("║  1. ¿Es par?                     ║");
-    println!("║  2. ¿Es primo?                   ║");
-    println!("║  3. Cantidad de dígitos          ║");
-    println!("║  4. Invertir                     ║");
-    println!("║  5. Es capicua?                  ║");    
-    println!("║  6. ¿Es Armstrong?               ║");
-    println!("║  7. Cantidad Dig Par             ║");
-    println!("║  8. Raiz Digital                 ║");
-    println!("║  9. Collatz                      ║");
-    println!("║  10. Insertar dígito             ║");
-    println!("║  11. Obtener dígito en posición  ║");
-    println!("║  12. Buscar dígito               ║");
-    println!("║  13. Rotar numeros a la izquierda║");
-    println!("╠══════════════════════════════════╣");
-    println!("║  0. Ingresar nuevo número        ║");
-    println!("║  Q. Salir                        ║");
-    println!("╚══════════════════════════════════╝");
-    print!("   Opción: ");
-    io::stdout().flush().expect("Error al mostrar menú");
 }
+
+// ═══════════════════════════════════════════════════════════════════
+//  MAIN
+// ═══════════════════════════════════════════════════════════════════
 
 fn main() {
-    println!("════════════════════════════════════");
-    println!("  Números - POO — Programación I");
-    println!("════════════════════════════════════");
-    println!("Ingresa un número para comenzar:");
-    // Validar que el usuario ingrese un número válido antes de crear la instancia de Numero
-    let valor_inicial: u64 = loop { //loop se repite hasta que encuentre un break
-        match leer_numero() {
-            Some(num) => break num,
-            None    => println!("Número inválido. Intenta de nuevo:"),
-        }
-    };
-    //creando una instancia de Numero con el valor inicial ingresado por el usuario
-    //ESTA ES LA INSTANCIA DEL OBJETO NUMERO, A PARTIR DE AQUÍ SE UTILIZARÁ PARA REALIZAR TODAS LAS CONSULTAS
-    let mut n =  Numero::new(valor_inicial);
+    println!("════════════════════════════════════════");
+    println!("  Matrices - POO — Programación I      ");
+    println!("════════════════════════════════════════");
 
-    loop { //el menu se mostrará en un bucle infinito hasta que el usuario decida salir usando la opción 'Q' (break)
-        mostrar_menu(&n);
-        let opcion = leer_linea();
+    // ── crear la matriz 3x3 ──────────────────────────────────────
+    let mut m = Matriz::new(5, 5);
 
-        match opcion.as_str() {  //usando match, se puede llamar a la función correspondiente.
-            // Consultas
-            "1" => println!("  ¿Es par?          → {}", n.es_par()),
-            "2" => println!("  ¿Es primo?        → {}", n.es_primo()),
-            "3" => println!("  Cantidad Digitos: → {}", n.cantidad_digitos()),
-            "4" => println!("  Invertir:         → {}", n.invertir()),
-            "5" => println!("  Es capicua?:      → {}", n.es_capicua()),
-            "6" => println!("  ¿Es Armstrong?    → {}", n.es_armstrong()),
-            "7" => println!("  Cantidad de Digitos Pares es    → {}", n.cant_dig_pares()),
-            "8" => println!("  La raiz gitital es    → {}", n.raiz_digital()),
-            "9" => {
-                   let (pasos, maximo) = n.collatz();
-                    println!("  Collatz → pasos: {}, máximo: {}", pasos, maximo);
-            }
-            "10" => {
-                println!("  Ingresa el dígito a insertar (0-9):");
-                match leer_numero() {
-                    Some(digito) if digito <= 9 => {
-                        println!("  Ingresa la posición (1 = izquierda):");
-                        match leer_numero() {
-                            Some(posicion) => {
-                                let resultado = n.insertar_digito(digito, posicion);
-                                println!("  Insertar dígito {} en posición {}: → {}", digito, posicion, resultado);
-                            }
-                            None => println!("  Posición inválida."),
-                        }
-                    }
-                    Some(_) => println!("  El dígito debe estar entre 0 y 9."),
-                    None    => println!("  Dígito inválido."),
-                }
-            }
-            "11" => {
-    println!("  Ingresa la posición (1 = izquierda):");
-    match leer_numero() {
-        Some(posicion) if posicion >= 1 && posicion <= n.cantidad_digitos() as u64 => {
-            let resultado = n.obtener_digito_posicion(posicion);
-            println!("  Dígito en posición {}: → {}", posicion, resultado);
-        }
-        Some(_) => println!("  Posición no encontrada"),
-        None    => println!("  Posición inválida."),
-    }
-}
+    // ── cargar datos directamente ────────────────────────────────
+    //        fila  col  valor
+    m.set_celda(0, 0, 1);   m.set_celda(0, 1, 1);   m.set_celda(0, 2, 2);    m.set_celda(0, 3, 4);    m.set_celda(0, 4, 6);
+    m.set_celda(1, 0, 4);   m.set_celda(1, 1, 1);   m.set_celda(1, 2, 2);    m.set_celda(1, 3, 2);    m.set_celda(1, 4, 2);
+    m.set_celda(2, 0, 7);   m.set_celda(2, 1, 8);   m.set_celda(2, 2, 10);   m.set_celda(2, 3, 4);    m.set_celda(2, 4, 1);
+    m.set_celda(3, 0, 3);   m.set_celda(3, 1, 7);   m.set_celda(3, 2, 6);    m.set_celda(3, 3, 5);    m.set_celda(3, 4, 10);
+    m.set_celda(4, 0, 6);   m.set_celda(4, 1, 1);   m.set_celda(4, 2, 8);    m.set_celda(4, 3, 9);    m.set_celda(4, 4, 0);
 
-"12" => {
-    println!("  Ingresa el dígito a buscar (0-9):");
-    match leer_numero() {
-        Some(digito) if digito <= 9 => {
-            let resultado = n.buscar_digito(digito);
-            if resultado == 0 {
-                println!("  El dígito {} no existe en el número.", digito);
-            } else {
-                println!("  Dígito {} encontrado en posición: → {}", digito, resultado);
-            }
-        }
-        Some(_) => println!("  El dígito debe estar entre 0 y 9."),
-        None    => println!("  Dígito inválido."),
-    }
-}
-            "13" => {
-                println!("  Ingresa la cantidad de veces que deben rotar los dígitos:");
-                match leer_numero() {
-                    Some(cant) => {
-                        let resultado = n.rotar_todos_los_numeros_n_veces_izquierda(cant);
-                        if cant <5 {
-                        println!(" Rotar {} posiciones: → {}", cant, resultado);
-                        } else {
-                        println!(" Rotar {} posiciones es igual a rotar {} posiciones: → {}", cant, cant-5, resultado);    
-                        }
-                    }
-                    None => println!("  Número de rotaciones inválido."),
-                }
-            }
-            "0" => {
-                println!("  Ingresa el nuevo número:");
-                match leer_numero() {
-                    Some(num) => { n.resetear(num); println!("  ✓ Nuevo número: {}", n.valor); }
-                    None    => println!("  Número inválido, se mantiene {}", n.valor),
-                }
-            }
-            "q" | "Q" => { println!("\n  Hasta luego.\n"); break; } //aquí se rompe el ciclo con "q" o "Q"
-            _ => println!("  Opción no válida."),
-        }
-    }
+    // ── mostrar ──────────────────────────────────────────────────
+    println!("Matriz original:");
+    m.mostrar();
+
+    // ── sumar elementos ──────────────────────────────────────────
+    println!("Suma de los elementos de cada posicion del vector es : {}", m.summar_elementos());    
+    println!("Suma de los elementos pares de cada posicion del vector es : {}", m.sumar_pares());
+    println!("Suma de los elementos impares de cada posicion del vector es : {}", m.sumar_impares());
+    println!("Elemento mayor de la matriz es : {}", m.elemento_mayor());
+    println!("Suma de los elementos de la columna 0 es : {}", m.sumar_columna(0));    
+    println!("Suma de los elementos de la fila 0 es : {}", m.sumar_fila(0));
+    println!("Celda [0][0] usando get_celda: {}", m.get_celda(0, 0));
+    println!("Busqueda binaria del elemento 8: {:?}", m.busqueda_binaria(8));
+    println!("La suma de los elementos que están en los bordes de esta matriz es de {}", m.sumar_borde());
+    println!("La matriz está ordenada: {}", m.esta_ordenada());
+    //println!("La matriz ordenada en espiral es:");
+    //m.ordenar_espiral();
+    //m.mostrar();
+    println!("La suma de la diagonal mayor es: {}", m.suma_diagonal_mayor());
+
+
+    //println!("Rotando el borde de la matriz...");
+    //m.rotar_borde();
+    //m.mostrar();
+
+    println!("Rotando el anillo interno de la matriz...");
+    m.rotar_anillo_interno();
+    m.mostrar();
+    //println!("El promedio de la diagonal mayor derecha es: {}", m.prom_diagonal_mayor_der());
+    //println!("El promedio de la diagonal menor izquierda es: {}", m.prom_diagonal_mayor_izq());
+    //println!("La matriz transpuesta es:");
+    //let transpuesta = m.transponer();
+    //transpuesta.mostrar();
+    //println!("La cantidad de números primos en la matriz es: {}", m.contar_primos());
+    //println!("Girando la matriz 90 grados a la derecha...");
+    //m.girar_90_grados();
+    //m.mostrar();
+    //println!("Frecuencia de cada número en la matriz:");
+    //let frecuencias = m.frecuencias();
+    //for (numero, frecuencia) in frecuencias {
+    //    println!("Número: {}, Frecuencia: {}", numero, frecuencia); 
+    //}
+    //println!("La matriz es mágica: {}", m.es_magica()); 
+    
 }
